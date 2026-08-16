@@ -5,6 +5,7 @@ DSH Desktop is a native macOS menu-bar client for [DeepSeek Harness](https://git
 ## Current features
 
 - Native AppKit menu-bar item and macOS window
+- Persistent Dock icon while DSH Desktop is running
 - Official upstream DeepSeek fish icon for the menu bar and app bundle
 - Left click to show or hide DSH; right click for status and actions
 - Start, stop, restart, update, open log, open data directory, and quit actions
