@@ -47,6 +47,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         }
         launcher.onNotice = { [weak self] message in self?.showNotice(message) }
         windowController.onRetry = { Task { await launcher.start() } }
+        windowController.onDownloadFailed = { [weak self] message in self?.showNotice(message) }
         statusController.onToggleWindow = { [weak self] in
             guard let self else { return }
             self.windowController.toggle()

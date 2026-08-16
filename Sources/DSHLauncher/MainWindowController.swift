@@ -2,7 +2,9 @@ import AppKit
 import WebKit
 
 @MainActor
-final class MainWindowController: NSWindowController, NSWindowDelegate, WKNavigationDelegate, WKUIDelegate {
+final class MainWindowController: NSWindowController, NSWindowDelegate, WKNavigationDelegate, WKUIDelegate,
+    WKDownloadDelegate
+{
     private let webView: WKWebView
     private let statusView = NSVisualEffectView()
     private let statusPanel = NSVisualEffectView()
@@ -19,8 +21,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
     private let installLogTextView = NSTextView(frame: .zero)
     private let retryButton = NSButton(title: "重试", target: nil, action: nil)
     private var installLogBuffer = InstallLogBuffer()
+    private var downloadFiles = DownloadFileCoordinator()
     private var allowedOrigin: URL?
     var onRetry: (() -> Void)?
+    var onDownloadFailed: ((String) -> Void)?
 
     init() {
         let configuration = WKWebViewConfiguration()
@@ -99,7 +103,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
             return
         }
         if isAllowed(url) {
-            decisionHandler(.allow)
+            decisionHandler(navigationAction.shouldPerformDownload ? .download : .allow)
         } else {
             if ["http", "https"].contains(url.scheme?.lowercased() ?? "") {
                 NSWorkspace.shared.open(url)
@@ -120,6 +124,71 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
             webView.load(request)
         }
         return nil
+    }
+
+    func webView(
+        _ webView: WKWebView,
+        navigationAction: WKNavigationAction,
+        didBecome download: WKDownload
+    ) {
+        download.delegate = self
+    }
+
+    func webView(
+        _ webView: WKWebView,
+        navigationResponse: WKNavigationResponse,
+        didBecome download: WKDownload
+    ) {
+        download.delegate = self
+    }
+
+    func download(
+        _ download: WKDownload,
+        decideDestinationUsing response: URLResponse,
+        suggestedFilename: String,
+        completionHandler: @escaping (URL?) -> Void
+    ) {
+        let panel = NSSavePanel()
+        panel.nameFieldStringValue = suggestedFilename
+        panel.directoryURL = FileManager.default.urls(for: .downloadsDirectory, in: .userDomainMask).first
+        panel.canCreateDirectories = true
+
+        let chooseDestination: (NSApplication.ModalResponse) -> Void = { [weak self] result in
+            guard let self, result == .OK, let destinationURL = panel.url else {
+                completionHandler(nil)
+                return
+            }
+            do {
+                let temporaryURL = try self.downloadFiles.prepare(
+                    downloadID: ObjectIdentifier(download),
+                    destinationURL: destinationURL
+                )
+                completionHandler(temporaryURL)
+            } catch {
+                self.onDownloadFailed?("无法准备下载位置：\(error.localizedDescription)")
+                completionHandler(nil)
+            }
+        }
+
+        if let window {
+            panel.beginSheetModal(for: window, completionHandler: chooseDestination)
+        } else {
+            panel.begin(completionHandler: chooseDestination)
+        }
+    }
+
+    func downloadDidFinish(_ download: WKDownload) {
+        do {
+            _ = try downloadFiles.finish(downloadID: ObjectIdentifier(download))
+        } catch {
+            onDownloadFailed?("无法保存下载文件：\(error.localizedDescription)")
+        }
+    }
+
+    func download(_ download: WKDownload, didFailWithError error: Error, resumeData: Data?) {
+        if downloadFiles.cancel(downloadID: ObjectIdentifier(download)) {
+            onDownloadFailed?("下载失败：\(error.localizedDescription)")
+        }
     }
 
     private func configureContent(in window: NSWindow) {
