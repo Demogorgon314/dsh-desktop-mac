@@ -7,7 +7,7 @@ final class PackageInstallerTests: XCTestCase {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
-        let paths = try AppPaths(root: root)
+        let paths = try AppPaths(root: root, dshHome: root.appendingPathComponent("dsh-home"))
         try paths.prepare()
         let pluginManifest = paths.dshHome.appendingPathComponent("profiles/web/package.json")
         try FileManager.default.createDirectory(

@@ -21,13 +21,15 @@ Launcher-managed DSH releases live below:
 ~/Library/Application Support/DSH Launcher/runtime/versions/<version>
 ```
 
-All Harness state lives in a separate, stable `DSH_HOME`:
+Harness state uses the same default `DSH_HOME` as the `dsh` command:
 
 ```text
-~/Library/Application Support/DSH Launcher/harness
+~/.dsh
 ```
 
-Profiles, installed plugins, credentials, settings, presets, attachments, and sessions therefore survive DSH upgrades. Every managed DSH release also includes the upstream-compatible `pnpm` executable on `PATH`, because `dsh plugin --profile <name> ...` delegates plugin operations to `pnpm` inside `$DSH_HOME/profiles/<name>`.
+An explicitly inherited `DSH_HOME` overrides that default. Profiles, installed plugins, credentials, settings, presets, attachments, and sessions are therefore shared with direct `dsh` invocations and survive Launcher or DSH upgrades. Every managed DSH release also includes the upstream-compatible `pnpm` executable on `PATH`, because `dsh plugin --profile <name> ...` delegates plugin operations to `pnpm` inside `$DSH_HOME/profiles/<name>`.
+
+Do not run a direct `dsh` service and the Launcher-managed service concurrently against the same `DSH_HOME`.
 
 ## Development
 

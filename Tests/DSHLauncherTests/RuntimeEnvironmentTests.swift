@@ -4,7 +4,8 @@ import XCTest
 
 final class RuntimeEnvironmentTests: XCTestCase {
     func testEnvironmentKeepsPluginsInStableHomeAndMakesPnpmDiscoverable() throws {
-        let paths = try AppPaths(root: URL(fileURLWithPath: "/tmp/dsh-launcher", isDirectory: true))
+        let root = URL(fileURLWithPath: "/tmp/dsh-launcher", isDirectory: true)
+        let paths = try AppPaths(root: root, dshHome: root.appendingPathComponent("harness"))
         let toolchain = Toolchain(
             node: URL(fileURLWithPath: "/runtime/bin/node"),
             npm: URL(fileURLWithPath: "/runtime/bin/npm")

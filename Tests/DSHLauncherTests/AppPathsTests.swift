@@ -3,11 +3,22 @@ import XCTest
 @testable import DSHLauncher
 
 final class AppPathsTests: XCTestCase {
+    func testDefaultDshHomeMatchesCommandLineDefault() throws {
+        let launcherRoot = URL(fileURLWithPath: "/tmp/dsh-launcher-tests", isDirectory: true)
+        let paths = try AppPaths(root: launcherRoot, environment: [:])
+
+        XCTAssertEqual(
+            paths.dshHome,
+            FileManager.default.homeDirectoryForCurrentUser.appendingPathComponent(".dsh", isDirectory: true)
+        )
+    }
+
     func testUserDataIsSeparateFromVersionedRuntime() throws {
         let root = URL(fileURLWithPath: "/tmp/dsh-launcher-tests", isDirectory: true)
-        let paths = try AppPaths(root: root)
+        let dshHome = URL(fileURLWithPath: "/tmp/existing-dsh-home", isDirectory: true)
+        let paths = try AppPaths(root: root, dshHome: dshHome)
 
-        XCTAssertEqual(paths.dshHome.path, "/tmp/dsh-launcher-tests/harness")
+        XCTAssertEqual(paths.dshHome.path, "/tmp/existing-dsh-home")
         XCTAssertEqual(paths.runtime(version: "1.2.3").path, "/tmp/dsh-launcher-tests/runtime/versions/1.2.3")
         XCTAssertFalse(paths.dshHome.path.hasPrefix(paths.runtimes.path))
     }
@@ -16,7 +27,7 @@ final class AppPathsTests: XCTestCase {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
-        let paths = try AppPaths(root: root)
+        let paths = try AppPaths(root: root, dshHome: root.appendingPathComponent("dsh-home"))
 
         try paths.prepare()
 
@@ -25,5 +36,15 @@ final class AppPathsTests: XCTestCase {
             XCTAssertTrue(FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory))
             XCTAssertTrue(isDirectory.boolValue)
         }
+    }
+
+    func testEnvironmentDshHomeOverridesCommandLineDefault() throws {
+        let paths = try AppPaths(
+            root: URL(fileURLWithPath: "/tmp/launcher"),
+            environment: ["DSH_HOME": "~/custom-dsh"],
+            homeDirectory: URL(fileURLWithPath: "/Users/example", isDirectory: true)
+        )
+
+        XCTAssertEqual(paths.dshHome.path, "/Users/example/custom-dsh")
     }
 }

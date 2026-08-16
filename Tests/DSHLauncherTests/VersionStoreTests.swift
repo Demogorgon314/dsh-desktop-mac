@@ -7,7 +7,7 @@ final class VersionStoreTests: XCTestCase {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
-        let paths = try AppPaths(root: root)
+        let paths = try AppPaths(root: root, dshHome: root.appendingPathComponent("dsh-home"))
         try paths.prepare()
         let store = VersionStore(paths: paths)
         let runtime = paths.runtime(version: "1.0.0")
@@ -29,7 +29,7 @@ final class VersionStoreTests: XCTestCase {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
-        let paths = try AppPaths(root: root)
+        let paths = try AppPaths(root: root, dshHome: root.appendingPathComponent("dsh-home"))
         try paths.prepare()
         let plugin = paths.dshHome.appendingPathComponent("profiles/web/package.json")
         try FileManager.default.createDirectory(at: plugin.deletingLastPathComponent(), withIntermediateDirectories: true)
