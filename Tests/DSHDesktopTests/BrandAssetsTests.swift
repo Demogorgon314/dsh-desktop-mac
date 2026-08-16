@@ -1,6 +1,6 @@
 import AppKit
 import XCTest
-@testable import DSHLauncher
+@testable import DSHDesktop
 
 final class BrandAssetsTests: XCTestCase {
     func testUpstreamDeepSeekFishLoadsAsMenuBarImage() throws {
@@ -55,6 +55,6 @@ final class BrandAssetsTests: XCTestCase {
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-            .appendingPathComponent("Sources/DSHLauncher/Resources/AppIconSource.png")
+            .appendingPathComponent("Sources/DSHDesktop/Resources/AppIconSource.png")
     }
 }

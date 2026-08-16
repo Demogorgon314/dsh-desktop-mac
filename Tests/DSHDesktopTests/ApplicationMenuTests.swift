@@ -1,6 +1,6 @@
 import AppKit
 import XCTest
-@testable import DSHLauncher
+@testable import DSHDesktop
 
 final class ApplicationMenuTests: XCTestCase {
     @MainActor

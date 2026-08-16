@@ -61,7 +61,7 @@ jobs:
         shell: bash
         run: |
           codesign --verify --deep --strict --verbose=2 "build/DSH Desktop.app"
-          architectures="$(lipo -archs "build/DSH Desktop.app/Contents/MacOS/DSHLauncher")"
+          architectures="$(lipo -archs "build/DSH Desktop.app/Contents/MacOS/DSHDesktop")"
           if [[ " $architectures " != *" ${{ matrix.arch }} "* ]]; then
             echo "Expected ${{ matrix.arch }} binary, got: $architectures" >&2
             exit 1

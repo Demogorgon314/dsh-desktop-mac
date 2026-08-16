@@ -97,7 +97,7 @@ final class StatusItemController: NSObject {
     private var brandResourceBundle: Bundle {
         if let resources = Bundle.main.resourceURL,
            let bundle = Bundle(
-               url: resources.appendingPathComponent("DSHLauncher_DSHLauncher.bundle", isDirectory: true)
+               url: resources.appendingPathComponent("DSHDesktop_DSHDesktop.bundle", isDirectory: true)
            ) {
             return bundle
         }

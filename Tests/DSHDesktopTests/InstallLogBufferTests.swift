@@ -1,5 +1,5 @@
 import XCTest
-@testable import DSHLauncher
+@testable import DSHDesktop
 
 final class InstallLogBufferTests: XCTestCase {
     func testAppendRemovesTerminalFormattingAndCarriageReturns() {

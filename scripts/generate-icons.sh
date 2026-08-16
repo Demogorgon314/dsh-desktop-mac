@@ -2,7 +2,7 @@
 set -euo pipefail
 
 repository_root="${0:A:h:h}"
-source_directory="${repository_root}/Sources/DSHLauncher/Resources"
+source_directory="${repository_root}/Sources/DSHDesktop/Resources"
 output_directory="${repository_root}/Resources"
 working_directory="${repository_root}/build/AppIcon.iconset"
 source_png="${source_directory}/AppIconSource.png"

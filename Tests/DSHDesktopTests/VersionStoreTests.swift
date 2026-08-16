@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import DSHLauncher
+@testable import DSHDesktop
 
 final class VersionStoreTests: XCTestCase {
     func testRuntimeRequiresBothDshAndPnpm() throws {

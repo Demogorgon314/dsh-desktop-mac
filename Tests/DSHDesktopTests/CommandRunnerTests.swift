@@ -1,6 +1,6 @@
 import Foundation
 import XCTest
-@testable import DSHLauncher
+@testable import DSHDesktop
 
 final class CommandRunnerTests: XCTestCase {
     func testRunStreamsStandardOutputAndError() async throws {

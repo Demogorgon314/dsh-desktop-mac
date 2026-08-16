@@ -49,7 +49,7 @@ Run the tests and app:
 
 ```sh
 swift test
-swift run DSHLauncher
+swift run DSHDesktop
 ```
 
 On first launch, DSH Desktop downloads the current `@deepseek-ai/dsh` release and `pnpm` into Application Support. If the npm registry cannot be reached, it starts the last successfully used local release.

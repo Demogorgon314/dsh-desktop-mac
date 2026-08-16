@@ -1,6 +1,6 @@
 import WebKit
 import XCTest
-@testable import DSHLauncher
+@testable import DSHDesktop
 
 final class WebDownloadTests: XCTestCase {
     @MainActor
