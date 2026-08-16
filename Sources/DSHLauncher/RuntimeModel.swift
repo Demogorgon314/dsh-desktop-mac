@@ -30,6 +30,7 @@ struct StatusPresentation: Equatable {
     let detail: String
     let tone: StatusTone
     let actionTitle: String?
+    let showsInstallLog: Bool
 
     var showsActivity: Bool { tone == .working }
 
@@ -42,31 +43,37 @@ struct StatusPresentation: Equatable {
             detail = "正在获取 DeepSeek Harness 的最新版本。"
             tone = .working
             actionTitle = nil
+            showsInstallLog = false
         case .installing(let version):
             title = "正在安装 DSH"
             detail = "正在准备 \(version)，首次安装可能需要几分钟。"
             tone = .working
             actionTitle = nil
+            showsInstallLog = true
         case .starting(let version):
             title = "正在启动 DSH"
             detail = "版本 \(version) 即将就绪。"
             tone = .working
             actionTitle = nil
+            showsInstallLog = false
         case .stopping:
             title = "正在停止服务"
             detail = "正在安全关闭当前 DSH 进程。"
             tone = .working
             actionTitle = nil
+            showsInstallLog = false
         case .stopped:
             title = "DSH 服务已停止"
             detail = "启动本地服务后即可继续使用。"
             tone = .idle
             actionTitle = "启动服务"
+            showsInstallLog = false
         case .failed(let message):
             title = "无法启动 DSH"
             detail = message
             tone = .error
             actionTitle = "重试"
+            showsInstallLog = false
         }
     }
 }

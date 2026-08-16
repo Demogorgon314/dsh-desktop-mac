@@ -14,7 +14,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
     private let statusTitleLabel = NSTextField(labelWithString: "正在准备 DSH")
     private let statusDetailLabel = NSTextField(labelWithString: "正在初始化本地服务。")
     private let activityIndicator = NSProgressIndicator()
+    private let installLogLabel = NSTextField(labelWithString: "安装日志")
+    private let installLogScrollView = NSScrollView()
+    private let installLogTextView = NSTextView(frame: .zero)
     private let retryButton = NSButton(title: "重试", target: nil, action: nil)
+    private var installLogBuffer = InstallLogBuffer()
     private var allowedOrigin: URL?
     var onRetry: (() -> Void)?
 
@@ -51,6 +55,12 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
         } else if let presentation = StatusPresentation(phase: phase) {
             showStatus(presentation)
         }
+    }
+
+    func appendInstallOutput(_ output: String) {
+        installLogBuffer.append(output)
+        installLogTextView.string = installLogBuffer.text
+        installLogTextView.scrollToEndOfDocument(nil)
     }
 
     func showAndFocus() {
@@ -167,6 +177,36 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
         activityIndicator.isIndeterminate = true
         activityIndicator.translatesAutoresizingMaskIntoConstraints = false
 
+        installLogLabel.font = .systemFont(ofSize: 11, weight: .medium)
+        installLogLabel.textColor = .secondaryLabelColor
+        installLogLabel.isHidden = true
+
+        installLogTextView.isEditable = false
+        installLogTextView.isSelectable = true
+        installLogTextView.isRichText = false
+        installLogTextView.drawsBackground = false
+        installLogTextView.font = .monospacedSystemFont(ofSize: 11, weight: .regular)
+        installLogTextView.textColor = .secondaryLabelColor
+        installLogTextView.textContainerInset = NSSize(width: 12, height: 10)
+        installLogTextView.frame = NSRect(x: 0, y: 0, width: 484, height: 132)
+        installLogTextView.minSize = NSSize(width: 0, height: 132)
+        installLogTextView.maxSize = NSSize(width: CGFloat.greatestFiniteMagnitude, height: CGFloat.greatestFiniteMagnitude)
+        installLogTextView.isVerticallyResizable = true
+        installLogTextView.isHorizontallyResizable = false
+        installLogTextView.autoresizingMask = [.width]
+        installLogTextView.textContainer?.widthTracksTextView = true
+
+        installLogScrollView.documentView = installLogTextView
+        installLogScrollView.translatesAutoresizingMaskIntoConstraints = false
+        installLogScrollView.hasVerticalScroller = true
+        installLogScrollView.autohidesScrollers = true
+        installLogScrollView.borderType = .noBorder
+        installLogScrollView.drawsBackground = false
+        installLogScrollView.wantsLayer = true
+        installLogScrollView.layer?.cornerRadius = 10
+        installLogScrollView.layer?.backgroundColor = NSColor.textBackgroundColor.withAlphaComponent(0.55).cgColor
+        installLogScrollView.isHidden = true
+
         retryButton.target = self
         retryButton.action = #selector(retry)
         retryButton.bezelStyle = .rounded
@@ -190,7 +230,15 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
         titleRow.alignment = .centerY
         titleRow.spacing = 12
 
-        let statusContent = NSStackView(views: [brandRow, titleRow, statusDetailLabel, activityIndicator, retryButton])
+        let statusContent = NSStackView(views: [
+            brandRow,
+            titleRow,
+            statusDetailLabel,
+            activityIndicator,
+            installLogLabel,
+            installLogScrollView,
+            retryButton,
+        ])
         statusContent.translatesAutoresizingMaskIntoConstraints = false
         statusContent.orientation = .vertical
         statusContent.alignment = .leading
@@ -198,6 +246,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
         statusContent.setCustomSpacing(30, after: brandRow)
         statusContent.setCustomSpacing(8, after: titleRow)
         statusContent.setCustomSpacing(24, after: statusDetailLabel)
+        statusContent.setCustomSpacing(18, after: activityIndicator)
+        statusContent.setCustomSpacing(7, after: installLogLabel)
 
         content.addSubview(webView)
         content.addSubview(statusView)
@@ -215,7 +265,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
             statusView.bottomAnchor.constraint(equalTo: content.bottomAnchor),
             statusPanel.centerXAnchor.constraint(equalTo: statusView.centerXAnchor),
             statusPanel.centerYAnchor.constraint(equalTo: statusView.centerYAnchor, constant: -24),
-            statusPanel.widthAnchor.constraint(equalToConstant: 460),
+            statusPanel.widthAnchor.constraint(equalToConstant: 560),
             statusContent.leadingAnchor.constraint(equalTo: statusPanel.leadingAnchor, constant: 38),
             statusContent.trailingAnchor.constraint(equalTo: statusPanel.trailingAnchor, constant: -38),
             statusContent.topAnchor.constraint(equalTo: statusPanel.topAnchor, constant: 34),
@@ -230,6 +280,8 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
             statusIndicator.heightAnchor.constraint(equalToConstant: 8),
             activityIndicator.widthAnchor.constraint(equalTo: statusContent.widthAnchor),
             activityIndicator.heightAnchor.constraint(equalToConstant: 4),
+            installLogScrollView.widthAnchor.constraint(equalTo: statusContent.widthAnchor),
+            installLogScrollView.heightAnchor.constraint(equalToConstant: 132),
         ])
     }
 
@@ -253,6 +305,12 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
         } else {
             activityIndicator.stopAnimation(nil)
         }
+        if presentation.showsInstallLog && installLogScrollView.isHidden {
+            installLogBuffer.reset()
+            installLogTextView.string = ""
+        }
+        installLogLabel.isHidden = !presentation.showsInstallLog
+        installLogScrollView.isHidden = !presentation.showsInstallLog
         retryButton.isHidden = presentation.actionTitle == nil
         if let actionTitle = presentation.actionTitle {
             retryButton.title = actionTitle

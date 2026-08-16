@@ -3,6 +3,22 @@ import Foundation
 final class PackageInstaller {
     static let pnpmVersion = "11.7.0"
 
+    static func installArguments(version: String) -> [String] {
+        [
+            "install",
+            "--no-audit",
+            "--no-fund",
+            "--loglevel=info",
+            "--save-exact",
+            "@deepseek-ai/dsh@\(version)",
+            "pnpm@\(pnpmVersion)",
+        ]
+    }
+
+    static func commandDescription(version: String) -> String {
+        "$ npm \(installArguments(version: version).joined(separator: " "))"
+    }
+
     private let paths: AppPaths
     private let toolchain: Toolchain
     private let store: VersionStore
@@ -23,7 +39,10 @@ final class PackageInstaller {
         self.fileManager = fileManager
     }
 
-    func installIfNeeded(version: String) async throws -> URL {
+    func installIfNeeded(
+        version: String,
+        onOutput: (@Sendable (String) -> Void)? = nil
+    ) async throws -> URL {
         if store.isUsable(version: version) { return paths.runtime(version: version) }
 
         let staging = paths.staging.appendingPathComponent("\(version)-\(UUID().uuidString)", isDirectory: true)
@@ -43,18 +62,14 @@ final class PackageInstaller {
         environment["PATH"] = [toolchain.binDirectory.path, environment["PATH"] ?? "/usr/bin:/bin"]
             .joined(separator: ":")
         environment["npm_config_cache"] = paths.npmCache.path
+        environment["npm_config_color"] = "false"
+        environment["NO_COLOR"] = "1"
         let result = try await commandRunner.run(
             executable: toolchain.npm,
-            arguments: [
-                "install",
-                "--no-audit",
-                "--no-fund",
-                "--save-exact",
-                "@deepseek-ai/dsh@\(version)",
-                "pnpm@\(Self.pnpmVersion)",
-            ],
+            arguments: Self.installArguments(version: version),
             currentDirectory: staging,
-            environment: environment
+            environment: environment,
+            onOutput: onOutput
         )
         guard result.status == 0 else {
             throw LauncherError.commandFailed(command: "npm install", code: result.status, output: result.output)

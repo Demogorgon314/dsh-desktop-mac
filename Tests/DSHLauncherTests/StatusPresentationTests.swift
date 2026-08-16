@@ -24,6 +24,7 @@ final class StatusPresentationTests: XCTestCase {
 
         XCTAssertEqual(presentation.title, "正在安装 DSH")
         XCTAssertTrue(presentation.detail.contains("0.1.0-rc.6"))
+        XCTAssertTrue(presentation.showsInstallLog)
     }
 
     func testStoppedPresentationOffersStartAction() throws {
@@ -32,6 +33,7 @@ final class StatusPresentationTests: XCTestCase {
         XCTAssertEqual(presentation.tone, .idle)
         XCTAssertEqual(presentation.actionTitle, "启动服务")
         XCTAssertFalse(presentation.showsActivity)
+        XCTAssertFalse(presentation.showsInstallLog)
     }
 
     func testFailedPresentationPreservesErrorAndOffersRetry() throws {

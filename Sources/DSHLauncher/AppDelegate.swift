@@ -42,6 +42,9 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
             self?.windowController.render(phase)
             self?.statusController.render(phase)
         }
+        launcher.onInstallOutput = { [weak self] output in
+            self?.windowController.appendInstallOutput(output)
+        }
         launcher.onNotice = { [weak self] message in self?.showNotice(message) }
         windowController.onRetry = { Task { await launcher.start() } }
         statusController.onToggleWindow = { [weak self] in

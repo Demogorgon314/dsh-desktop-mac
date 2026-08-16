@@ -8,6 +8,7 @@ final class LauncherController {
 
     var onPhaseChanged: ((RuntimePhase) -> Void)?
     var onNotice: ((String) -> Void)?
+    var onInstallOutput: ((String) -> Void)?
 
     let paths: AppPaths
     private let registry: LatestVersionProviding
@@ -39,7 +40,7 @@ final class LauncherController {
             if !dependencies.store.isUsable(version: version) {
                 phase = .installing(version: version)
             }
-            _ = try await dependencies.installer.installIfNeeded(version: version)
+            _ = try await install(version: version, with: dependencies.installer)
             try await launch(version: version, dependencies: dependencies)
         } catch {
             phase = .failed(message: userMessage(error))
@@ -103,7 +104,7 @@ final class LauncherController {
             }
 
             phase = .installing(version: latest)
-            _ = try await dependencies.installer.installIfNeeded(version: latest)
+            _ = try await install(version: latest, with: dependencies.installer)
             await runtime?.stop()
             stoppedForUpdate = true
             try await launch(version: latest, dependencies: dependencies)
@@ -163,6 +164,16 @@ final class LauncherController {
             if let installed = store.newestUsableVersion() { return installed }
             throw LauncherError.noInstalledRuntime
         }
+    }
+
+    private func install(version: String, with installer: PackageInstaller) async throws -> URL {
+        onInstallOutput?(PackageInstaller.commandDescription(version: version) + "\n")
+        return try await installer.installIfNeeded(
+            version: version,
+            onOutput: { [weak self] output in
+                Task { @MainActor in self?.onInstallOutput?(output) }
+            }
+        )
     }
 
     private func launch(

@@ -12,6 +12,31 @@ protocol CommandRunning {
         currentDirectory: URL?,
         environment: [String: String]?
     ) async throws -> CommandResult
+
+    func run(
+        executable: URL,
+        arguments: [String],
+        currentDirectory: URL?,
+        environment: [String: String]?,
+        onOutput: (@Sendable (String) -> Void)?
+    ) async throws -> CommandResult
+}
+
+extension CommandRunning {
+    func run(
+        executable: URL,
+        arguments: [String],
+        currentDirectory: URL?,
+        environment: [String: String]?,
+        onOutput: (@Sendable (String) -> Void)?
+    ) async throws -> CommandResult {
+        try await run(
+            executable: executable,
+            arguments: arguments,
+            currentDirectory: currentDirectory,
+            environment: environment
+        )
+    }
 }
 
 final class CommandRunner: CommandRunning {
@@ -20,6 +45,22 @@ final class CommandRunner: CommandRunning {
         arguments: [String],
         currentDirectory: URL? = nil,
         environment: [String: String]? = nil
+    ) async throws -> CommandResult {
+        try await run(
+            executable: executable,
+            arguments: arguments,
+            currentDirectory: currentDirectory,
+            environment: environment,
+            onOutput: nil
+        )
+    }
+
+    func run(
+        executable: URL,
+        arguments: [String],
+        currentDirectory: URL? = nil,
+        environment: [String: String]? = nil,
+        onOutput: (@Sendable (String) -> Void)?
     ) async throws -> CommandResult {
         try await withCheckedThrowingContinuation { continuation in
             let process = Process()
@@ -37,11 +78,15 @@ final class CommandRunner: CommandRunning {
                 let data = handle.availableData
                 guard !data.isEmpty else { return }
                 output.append(data)
+                onOutput?(String(decoding: data, as: UTF8.self))
             }
             process.terminationHandler = { process in
                 outputPipe.fileHandleForReading.readabilityHandler = nil
                 let tail = outputPipe.fileHandleForReading.readDataToEndOfFile()
                 output.append(tail)
+                if !tail.isEmpty {
+                    onOutput?(String(decoding: tail, as: UTF8.self))
+                }
                 let result = CommandResult(
                     status: process.terminationStatus,
                     output: output.string()

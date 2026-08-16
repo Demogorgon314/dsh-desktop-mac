@@ -3,6 +3,15 @@ import XCTest
 @testable import DSHLauncher
 
 final class PackageInstallerTests: XCTestCase {
+    func testCommandDescriptionMatchesInstallArguments() {
+        let arguments = PackageInstaller.installArguments(version: "0.1.0-rc.6")
+
+        XCTAssertEqual(
+            PackageInstaller.commandDescription(version: "0.1.0-rc.6"),
+            "$ npm \(arguments.joined(separator: " "))"
+        )
+    }
+
     func testInstallIncludesDshAndPnpmWithoutWritingPluginHome() async throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
@@ -35,6 +44,9 @@ final class PackageInstallerTests: XCTestCase {
         XCTAssertEqual(installed, paths.runtime(version: "0.1.0-rc.6"))
         XCTAssertTrue(runner.arguments.contains("@deepseek-ai/dsh@0.1.0-rc.6"))
         XCTAssertTrue(runner.arguments.contains("pnpm@\(PackageInstaller.pnpmVersion)"))
+        XCTAssertTrue(runner.arguments.contains("--loglevel=info"))
+        XCTAssertEqual(runner.environment?["npm_config_color"], "false")
+        XCTAssertEqual(runner.environment?["NO_COLOR"], "1")
         XCTAssertEqual(try Data(contentsOf: pluginManifest), originalPluginData)
         XCTAssertTrue(store.isUsable(version: "0.1.0-rc.6"))
     }
@@ -42,6 +54,7 @@ final class PackageInstallerTests: XCTestCase {
 
 private final class InstallingCommandRunner: CommandRunning {
     private(set) var arguments: [String] = []
+    private(set) var environment: [String: String]?
 
     func run(
         executable: URL,
@@ -50,6 +63,7 @@ private final class InstallingCommandRunner: CommandRunning {
         environment: [String: String]?
     ) async throws -> CommandResult {
         self.arguments = arguments
+        self.environment = environment
         let directory = try XCTUnwrap(currentDirectory)
         let dsh = directory.appendingPathComponent("node_modules/@deepseek-ai/dsh/lib/bin.js")
         let pnpm = directory.appendingPathComponent("node_modules/.bin/pnpm")
