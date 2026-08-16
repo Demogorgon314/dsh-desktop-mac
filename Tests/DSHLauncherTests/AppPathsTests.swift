@@ -3,6 +3,10 @@ import XCTest
 @testable import DSHLauncher
 
 final class AppPathsTests: XCTestCase {
+    func testApplicationSupportDirectoryMatchesProductName() {
+        XCTAssertEqual(AppPaths.applicationSupportDirectoryName, "DSH Desktop")
+    }
+
     func testDefaultDshHomeMatchesCommandLineDefault() throws {
         let launcherRoot = URL(fileURLWithPath: "/tmp/dsh-launcher-tests", isDirectory: true)
         let paths = try AppPaths(root: launcherRoot, environment: [:])

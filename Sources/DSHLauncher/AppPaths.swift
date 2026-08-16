@@ -1,6 +1,8 @@
 import Foundation
 
 struct AppPaths {
+    static let applicationSupportDirectoryName = "DSH Desktop"
+
     let root: URL
     let dshHome: URL
 
@@ -20,7 +22,10 @@ struct AppPaths {
                 appropriateFor: nil,
                 create: true
             )
-            self.root = applicationSupport.appendingPathComponent("DSH Launcher", isDirectory: true)
+            self.root = applicationSupport.appendingPathComponent(
+                Self.applicationSupportDirectoryName,
+                isDirectory: true
+            )
         }
         self.dshHome = dshHome ?? Self.resolveDshHome(
             environment: environment,

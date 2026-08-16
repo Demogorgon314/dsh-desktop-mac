@@ -16,10 +16,10 @@ DSH Desktop is a native macOS menu-bar client for [DeepSeek Harness](https://git
 
 ## Plugin and user-data compatibility
 
-DSH Desktop-managed releases live below. The existing directory name is retained for upgrade compatibility:
+DSH Desktop-managed releases live below:
 
 ```text
-~/Library/Application Support/DSH Launcher/runtime/versions/<version>
+~/Library/Application Support/DSH Desktop/runtime/versions/<version>
 ```
 
 Harness state uses the same default `DSH_HOME` as the `dsh` command:
