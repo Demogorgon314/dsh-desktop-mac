@@ -11,14 +11,15 @@ final class BrandAssetsTests: XCTestCase {
         XCTAssertGreaterThan(image.size.height, 0)
     }
 
-    func testAppIconUsesBlackDeepSeekFishOnWhite() throws {
-        let url = try XCTUnwrap(Bundle.module.url(forResource: "AppIconSource", withExtension: "svg"))
-        let source = try String(contentsOf: url, encoding: .utf8)
+    func testAppIconSourceIsHighResolutionWithTransparentCorners() throws {
+        let url = try XCTUnwrap(Bundle.module.url(forResource: "AppIconSource", withExtension: "png"))
+        let data = try Data(contentsOf: url)
+        let representation = try XCTUnwrap(NSBitmapImageRep(data: data))
 
-        XCTAssertTrue(source.contains("fill=\"#fff\""))
-        XCTAssertTrue(source.contains("DeepSeekFish.svg"))
-        XCTAssertTrue(source.contains("x=\"100\" y=\"100\" width=\"824\" height=\"824\""))
-        XCTAssertTrue(source.contains("x=\"200\" y=\"200\" width=\"624\" height=\"624\""))
-        XCTAssertFalse(source.contains("#4D6BFE"))
+        XCTAssertEqual(representation.pixelsWide, 1024)
+        XCTAssertEqual(representation.pixelsHigh, 1024)
+        XCTAssertTrue(representation.hasAlpha)
+        XCTAssertEqual(representation.colorAt(x: 0, y: 0)?.alphaComponent ?? 1, 0, accuracy: 0.01)
+        XCTAssertEqual(representation.colorAt(x: 512, y: 512)?.alphaComponent ?? 0, 1, accuracy: 0.01)
     }
 }

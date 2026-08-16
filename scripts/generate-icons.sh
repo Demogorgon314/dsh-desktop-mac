@@ -5,11 +5,10 @@ repository_root="${0:A:h:h}"
 source_directory="${repository_root}/Sources/DSHLauncher/Resources"
 output_directory="${repository_root}/Resources"
 working_directory="${repository_root}/build/AppIcon.iconset"
-source_png="${repository_root}/build/AppIcon.png"
+source_png="${source_directory}/AppIconSource.png"
 
 rm -rf "${working_directory}"
 mkdir -p "${working_directory}" "${output_directory}"
-rsvg-convert --width 1024 --height 1024 --output "${source_png}" "${source_directory}/AppIconSource.svg"
 
 for size in 16 32 128 256 512; do
     sips -z "${size}" "${size}" "${source_png}" --out "${working_directory}/icon_${size}x${size}.png" >/dev/null
