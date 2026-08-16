@@ -86,22 +86,11 @@ final class StatusItemController: NSObject {
     }
 
     private func brandImage() -> NSImage? {
-        guard let url = brandResourceBundle.url(forResource: "DeepSeekFish", withExtension: "svg"),
-              let image = NSImage(contentsOf: url) else { return nil }
+        guard let image = BrandAssets.image() else { return nil }
         image.size = NSSize(width: 19, height: 19)
         image.isTemplate = true
         image.accessibilityDescription = "DeepSeek Harness"
         return image
-    }
-
-    private var brandResourceBundle: Bundle {
-        if let resources = Bundle.main.resourceURL,
-           let bundle = Bundle(
-               url: resources.appendingPathComponent("DSHDesktop_DSHDesktop.bundle", isDirectory: true)
-           ) {
-            return bundle
-        }
-        return Bundle.module
     }
 
     @objc private func open() { onOpen?() }

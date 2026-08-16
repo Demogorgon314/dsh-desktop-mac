@@ -11,6 +11,21 @@ final class BrandAssetsTests: XCTestCase {
         XCTAssertGreaterThan(image.size.height, 0)
     }
 
+    func testBrandImageLoadsFromPackagedResourceBundleDirectory() throws {
+        let image = try XCTUnwrap(
+            BrandAssets.image(
+                searchDirectories: [Bundle.module.bundleURL.deletingLastPathComponent()]
+            )
+        )
+
+        XCTAssertGreaterThan(image.size.width, 0)
+        XCTAssertGreaterThan(image.size.height, 0)
+    }
+
+    func testBrandImageGracefullyHandlesMissingResourceBundle() {
+        XCTAssertNil(BrandAssets.image(searchDirectories: [repositoryRoot]))
+    }
+
     func testAppIconSourceIsHighResolutionWithTransparentCorners() throws {
         let data = try Data(contentsOf: appIconSourceURL)
         let representation = try XCTUnwrap(NSBitmapImageRep(data: data))

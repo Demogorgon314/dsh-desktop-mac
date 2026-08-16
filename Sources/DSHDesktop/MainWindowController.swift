@@ -395,8 +395,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
     }
 
     private func brandImage() -> NSImage? {
-        guard let url = Bundle.module.url(forResource: "DeepSeekFish", withExtension: "svg"),
-              let image = NSImage(contentsOf: url) else { return nil }
+        guard let image = BrandAssets.image() else { return nil }
         image.isTemplate = true
         return image
     }
