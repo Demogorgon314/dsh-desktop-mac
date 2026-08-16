@@ -1,3 +1,7 @@
+<p align="center">
+  <img src="docs/assets/readme-hero.png" alt="DSH Desktop — native macOS client for DeepSeek Harness" width="100%">
+</p>
+
 # DSH Desktop for macOS
 
 DSH Desktop is a native macOS menu-bar client for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). It starts the latest npm release of `@deepseek-ai/dsh`, waits for its loopback-only Web server, and displays the upstream UI in `WKWebView`. It does not bundle Electron or reimplement Harness.
