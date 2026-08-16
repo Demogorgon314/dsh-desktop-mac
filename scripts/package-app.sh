@@ -3,7 +3,7 @@ set -euo pipefail
 
 repository_root="${0:A:h:h}"
 output_root="${repository_root}/build"
-app_bundle="${output_root}/DSH Launcher.app"
+app_bundle="${output_root}/DSH Desktop.app"
 contents="${app_bundle}/Contents"
 
 swift build --package-path "${repository_root}" -c release

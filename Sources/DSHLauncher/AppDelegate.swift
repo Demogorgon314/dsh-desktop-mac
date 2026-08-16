@@ -63,7 +63,7 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
 
     private func showNotice(_ message: String) {
         let alert = NSAlert()
-        alert.messageText = "DSH Launcher"
+        alert.messageText = "DSH Desktop"
         alert.informativeText = message
         alert.alertStyle = .informational
         alert.addButton(withTitle: "好")

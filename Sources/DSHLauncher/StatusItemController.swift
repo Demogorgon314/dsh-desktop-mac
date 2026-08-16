@@ -57,7 +57,7 @@ final class StatusItemController: NSObject {
         menu.addItem(item("打开日志", action: #selector(openLog)))
         menu.addItem(item("打开数据目录", action: #selector(openData)))
         menu.addItem(.separator())
-        menu.addItem(item("退出 DSH Launcher", action: #selector(quit), key: "q"))
+        menu.addItem(item("退出 DSH Desktop", action: #selector(quit), key: "q"))
         return menu
     }
 

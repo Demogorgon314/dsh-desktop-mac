@@ -21,7 +21,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
             backing: .buffered,
             defer: false
         )
-        window.title = "DSH Launcher"
+        window.title = "DSH Desktop"
         window.minSize = NSSize(width: 900, height: 640)
         window.center()
         window.isReleasedWhenClosed = false

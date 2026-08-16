@@ -1,6 +1,6 @@
-# DSH Launcher for macOS
+# DSH Desktop for macOS
 
-DSH Launcher is a native macOS menu-bar client for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). It starts the latest npm release of `@deepseek-ai/dsh`, waits for its loopback-only Web server, and displays the upstream UI in `WKWebView`. It does not bundle Electron or reimplement Harness.
+DSH Desktop is a native macOS menu-bar client for [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harness). It starts the latest npm release of `@deepseek-ai/dsh`, waits for its loopback-only Web server, and displays the upstream UI in `WKWebView`. It does not bundle Electron or reimplement Harness.
 
 ## Current features
 
@@ -16,7 +16,7 @@ DSH Launcher is a native macOS menu-bar client for [DeepSeek Harness](https://gi
 
 ## Plugin and user-data compatibility
 
-Launcher-managed DSH releases live below:
+DSH Desktop-managed releases live below. The existing directory name is retained for upgrade compatibility:
 
 ```text
 ~/Library/Application Support/DSH Launcher/runtime/versions/<version>
@@ -28,9 +28,9 @@ Harness state uses the same default `DSH_HOME` as the `dsh` command:
 ~/.dsh
 ```
 
-An explicitly inherited `DSH_HOME` overrides that default. Profiles, installed plugins, credentials, settings, presets, attachments, and sessions are therefore shared with direct `dsh` invocations and survive Launcher or DSH upgrades. Every managed DSH release also includes the upstream-compatible `pnpm` executable on `PATH`, because `dsh plugin --profile <name> ...` delegates plugin operations to `pnpm` inside `$DSH_HOME/profiles/<name>`.
+An explicitly inherited `DSH_HOME` overrides that default. Profiles, installed plugins, credentials, settings, presets, attachments, and sessions are therefore shared with direct `dsh` invocations and survive DSH Desktop or DSH upgrades. Every managed DSH release also includes the upstream-compatible `pnpm` executable on `PATH`, because `dsh plugin --profile <name> ...` delegates plugin operations to `pnpm` inside `$DSH_HOME/profiles/<name>`.
 
-Do not run a direct `dsh` service and the Launcher-managed service concurrently against the same `DSH_HOME`.
+Do not run a direct `dsh` service and the DSH Desktop-managed service concurrently against the same `DSH_HOME`.
 
 ## Development
 
@@ -47,13 +47,13 @@ swift test
 swift run DSHLauncher
 ```
 
-On first launch, DSH Launcher downloads the current `@deepseek-ai/dsh` release and `pnpm` into Application Support. If the npm registry cannot be reached, it starts the last successfully used local release.
+On first launch, DSH Desktop downloads the current `@deepseek-ai/dsh` release and `pnpm` into Application Support. If the npm registry cannot be reached, it starts the last successfully used local release.
 
 ## Build an app bundle
 
 ```sh
 ./scripts/package-app.sh
-open "build/DSH Launcher.app"
+open "build/DSH Desktop.app"
 ```
 
 For a self-contained distribution, provide a macOS Node.js runtime directory that contains `bin/node`, `bin/npm`, and npm's supporting files:
