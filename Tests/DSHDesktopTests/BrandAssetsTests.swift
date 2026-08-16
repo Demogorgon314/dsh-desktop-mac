@@ -26,6 +26,14 @@ final class BrandAssetsTests: XCTestCase {
         XCTAssertNil(Bundle.module.url(forResource: "AppIconSource", withExtension: "png"))
     }
 
+    func testPackagedAppIconIsCappedAt512Pixels() throws {
+        let image = try XCTUnwrap(NSImage(contentsOf: appIconURL))
+        let pixelWidths = image.representations.map(\.pixelsWide)
+
+        XCTAssertEqual(pixelWidths.max(), 512)
+        XCTAssertTrue(pixelWidths.contains(512))
+    }
+
     func testApplicationIconLoadsBundledImageForDock() throws {
         let image = try XCTUnwrap(
             ApplicationIcon.load(
@@ -51,10 +59,18 @@ final class BrandAssetsTests: XCTestCase {
     }
 
     private var appIconSourceURL: URL {
+        repositoryRoot
+            .appendingPathComponent("Sources/DSHDesktop/Resources/AppIconSource.png")
+    }
+
+    private var appIconURL: URL {
+        repositoryRoot.appendingPathComponent("Resources/AppIcon.icns")
+    }
+
+    private var repositoryRoot: URL {
         URL(fileURLWithPath: #filePath)
             .deletingLastPathComponent()
             .deletingLastPathComponent()
             .deletingLastPathComponent()
-            .appendingPathComponent("Sources/DSHDesktop/Resources/AppIconSource.png")
     }
 }
