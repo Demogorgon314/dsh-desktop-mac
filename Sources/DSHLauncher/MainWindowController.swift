@@ -58,6 +58,7 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
 
     func showAndFocus() {
         guard let window else { return }
+        NSApp.setActivationPolicy(WindowVisibilityPolicy.activationPolicy(isVisible: true))
         NSApp.activate(ignoringOtherApps: true)
         showWindow(nil)
         if window.isMiniaturized { window.deminiaturize(nil) }
@@ -67,15 +68,20 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
     func toggle() {
         guard let window else { return }
         if window.isVisible && window.isKeyWindow {
-            window.orderOut(nil)
+            hide()
         } else {
             showAndFocus()
         }
     }
 
     func windowShouldClose(_ sender: NSWindow) -> Bool {
-        sender.orderOut(nil)
+        hide()
         return false
+    }
+
+    func hide() {
+        window?.orderOut(nil)
+        NSApp.setActivationPolicy(WindowVisibilityPolicy.activationPolicy(isVisible: false))
     }
 
     func webView(
@@ -175,5 +181,11 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
 
     @objc private func retry() {
         onRetry?()
+    }
+}
+
+enum WindowVisibilityPolicy {
+    static func activationPolicy(isVisible: Bool) -> NSApplication.ActivationPolicy {
+        isVisible ? .regular : .accessory
     }
 }

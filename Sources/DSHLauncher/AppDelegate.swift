@@ -32,6 +32,11 @@ final class AppDelegate: NSObject, NSApplicationDelegate {
         return .terminateLater
     }
 
+    func applicationShouldHandleReopen(_ sender: NSApplication, hasVisibleWindows flag: Bool) -> Bool {
+        windowController.showAndFocus()
+        return true
+    }
+
     private func bind(_ launcher: LauncherController) {
         launcher.onPhaseChanged = { [weak self] phase in
             self?.windowController.render(phase)
