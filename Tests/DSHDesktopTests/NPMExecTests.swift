@@ -2,6 +2,10 @@ import XCTest
 @testable import DSHDesktop
 
 final class NPMExecTests: XCTestCase {
+    func testStartupTimeoutAllowsSlowNpmPreparation() {
+        XCTAssertEqual(HarnessRuntime.startupTimeout, 30 * 60)
+    }
+
     func testOnlineArgumentsUseExactDshAndPnpmVersions() {
         let arguments = HarnessRuntime.npmArguments(
             version: "0.1.0-rc.6",

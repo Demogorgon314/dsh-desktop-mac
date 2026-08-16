@@ -109,7 +109,7 @@ enum LauncherError: LocalizedError {
         case .harnessExited(let code):
             return "DSH 服务意外退出，退出码 \(code)。"
         case .startupTimedOut:
-            return "DSH 服务没有在 5 分钟内完成准备和启动。"
+            return "DSH 服务没有在 30 分钟内完成准备和启动。"
         }
     }
 }

@@ -4,6 +4,7 @@ import Foundation
 @MainActor
 final class HarnessRuntime {
     nonisolated static let pnpmVersion = "11.7.0"
+    nonisolated static let startupTimeout: TimeInterval = 30 * 60
 
     private let paths: AppPaths
     private let toolchain: Toolchain
@@ -134,7 +135,8 @@ final class HarnessRuntime {
     }
 
     private func waitUntilReady(url: URL, process: Process) async throws {
-        for _ in 0..<1_200 {
+        let deadline = Date().addingTimeInterval(Self.startupTimeout)
+        while Date() < deadline {
             guard process.isRunning else { throw LauncherError.harnessExited(process.terminationStatus) }
             var request = URLRequest(url: url)
             request.timeoutInterval = 1
