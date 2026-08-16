@@ -11,11 +11,12 @@ final class BrandAssetsTests: XCTestCase {
         XCTAssertGreaterThan(image.size.height, 0)
     }
 
-    func testAppIconUsesDeepSeekBrandBlue() throws {
+    func testAppIconUsesBlackDeepSeekFishOnWhite() throws {
         let url = try XCTUnwrap(Bundle.module.url(forResource: "AppIconSource", withExtension: "svg"))
         let source = try String(contentsOf: url, encoding: .utf8)
 
-        XCTAssertTrue(source.contains("#4D6BFE"))
+        XCTAssertTrue(source.contains("fill=\"#fff\""))
         XCTAssertTrue(source.contains("DeepSeekFish.svg"))
+        XCTAssertFalse(source.contains("#4D6BFE"))
     }
 }
