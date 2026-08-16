@@ -61,6 +61,13 @@ On first launch, DSH Desktop downloads the current `@deepseek-ai/dsh` release an
 open "build/DSH Desktop.app"
 ```
 
+Build and verify a drag-to-install disk image after packaging the app:
+
+```sh
+./scripts/package-dmg.sh
+open "build/DSH Desktop.dmg"
+```
+
 For a self-contained distribution, provide a macOS Node.js runtime directory that contains `bin/node`, `bin/npm`, and npm's supporting files:
 
 ```sh
@@ -71,7 +78,7 @@ The development build is ad-hoc signed. Distribution builds should set `CODE_SIG
 
 ## Releases
 
-Pushing a semantic version tag runs the release workflow, tests and packages Apple Silicon and Intel builds, and publishes ZIP archives with SHA-256 checksums:
+Pushing a semantic version tag runs the release workflow, tests and packages Apple Silicon and Intel builds, and publishes drag-to-install DMG images with SHA-256 checksums:
 
 ```sh
 git tag v0.1.0

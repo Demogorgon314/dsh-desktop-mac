@@ -67,16 +67,14 @@ jobs:
             exit 1
           fi
 
-      - name: Create release archive
-        id: archive
+      - name: Create release disk image
         shell: bash
         run: |
-          archive="DSH-Desktop-${{ steps.version.outputs.value }}-macOS-${{ matrix.asset_suffix }}.zip"
+          disk_image="DSH-Desktop-${{ steps.version.outputs.value }}-macOS-${{ matrix.asset_suffix }}.dmg"
           mkdir -p dist
-          ditto -c -k --sequesterRsrc --keepParent "build/DSH Desktop.app" "dist/$archive"
+          ./scripts/package-dmg.sh "dist/$disk_image"
           cd dist
-          shasum -a 256 "$archive" > "$archive.sha256"
-          echo "name=$archive" >> "$GITHUB_OUTPUT"
+          shasum -a 256 "$disk_image" > "$disk_image.sha256"
 
       - name: Upload release artifact
         uses: actions/upload-artifact@v4
@@ -117,7 +115,7 @@ jobs:
           RELEASE_NOTES: |
             ## 安装说明
 
-            当前构建使用 ad-hoc 签名，尚未经过 Apple 公证。下载并解压后，将 `DSH Desktop.app` 移动到 `/Applications`。
+            当前构建使用 ad-hoc 签名，尚未经过 Apple 公证。下载并打开 DMG，然后将 `DSH Desktop.app` 拖入 `Applications`。
 
             如果 macOS 提示应用无法验证或禁止启动，请执行：
 

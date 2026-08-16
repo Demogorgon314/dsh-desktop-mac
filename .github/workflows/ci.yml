@@ -26,3 +26,9 @@ jobs:
 
       - name: Run tests
         run: swift test
+
+      - name: Build app bundle
+        run: ./scripts/package-app.sh
+
+      - name: Build and verify disk image
+        run: ./scripts/package-dmg.sh
