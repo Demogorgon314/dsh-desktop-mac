@@ -65,4 +65,22 @@ DSH_NODE_RUNTIME=/path/to/node-runtime ./scripts/package-app.sh
 
 The development build is ad-hoc signed. Distribution builds should set `CODE_SIGN_IDENTITY`, enable hardened runtime in the release pipeline, and be notarized before publication.
 
+## Releases
+
+Pushing a semantic version tag runs the release workflow, tests and packages Apple Silicon and Intel builds, and publishes ZIP archives with SHA-256 checksums:
+
+```sh
+git tag v0.1.0
+git push origin v0.1.0
+```
+
+Until the app is signed with a Developer ID certificate and notarized by Apple, users may need to remove the quarantine attribute after moving it to Applications:
+
+```sh
+sudo xattr -dr com.apple.quarantine "/Applications/DSH Desktop.app"
+open "/Applications/DSH Desktop.app"
+```
+
+Only run this command for an app downloaded from this repository's official GitHub Releases.
+
 Brand asset attribution is documented in [THIRD_PARTY_NOTICES.md](THIRD_PARTY_NOTICES.md).

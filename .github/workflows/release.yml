@@ -1,0 +1,139 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - "v*"
+
+permissions:
+  contents: read
+
+concurrency:
+  group: release-${{ github.ref }}
+  cancel-in-progress: false
+
+jobs:
+  build:
+    name: Build (${{ matrix.arch }})
+    strategy:
+      fail-fast: false
+      matrix:
+        include:
+          - runner: macos-15
+            arch: arm64
+            asset_suffix: apple-silicon
+          - runner: macos-15-intel
+            arch: x86_64
+            asset_suffix: intel
+    runs-on: ${{ matrix.runner }}
+    timeout-minutes: 20
+    steps:
+      - name: Check out tagged source
+        uses: actions/checkout@v6
+
+      - name: Validate release tag
+        id: version
+        shell: bash
+        run: |
+          version="${GITHUB_REF_NAME#v}"
+          if [[ ! "$version" =~ ^[0-9]+\.[0-9]+\.[0-9]+([.-][0-9A-Za-z.-]+)?$ ]]; then
+            echo "Expected a semantic version tag such as v0.1.0 or v0.1.0-rc.1" >&2
+            exit 1
+          fi
+          echo "value=$version" >> "$GITHUB_OUTPUT"
+
+      - name: Show Swift version
+        run: swift --version
+
+      - name: Run tests
+        run: swift test
+
+      - name: Set bundle version
+        shell: bash
+        run: |
+          /usr/libexec/PlistBuddy -c "Set :CFBundleShortVersionString ${{ steps.version.outputs.value }}" Resources/Info.plist
+          /usr/libexec/PlistBuddy -c "Set :CFBundleVersion $GITHUB_RUN_NUMBER" Resources/Info.plist
+
+      - name: Build app bundle
+        run: ./scripts/package-app.sh
+
+      - name: Verify app bundle
+        shell: bash
+        run: |
+          codesign --verify --deep --strict --verbose=2 "build/DSH Desktop.app"
+          architectures="$(lipo -archs "build/DSH Desktop.app/Contents/MacOS/DSHLauncher")"
+          if [[ " $architectures " != *" ${{ matrix.arch }} "* ]]; then
+            echo "Expected ${{ matrix.arch }} binary, got: $architectures" >&2
+            exit 1
+          fi
+
+      - name: Create release archive
+        id: archive
+        shell: bash
+        run: |
+          archive="DSH-Desktop-${{ steps.version.outputs.value }}-macOS-${{ matrix.asset_suffix }}.zip"
+          mkdir -p dist
+          ditto -c -k --sequesterRsrc --keepParent "build/DSH Desktop.app" "dist/$archive"
+          cd dist
+          shasum -a 256 "$archive" > "$archive.sha256"
+          echo "name=$archive" >> "$GITHUB_OUTPUT"
+
+      - name: Upload release artifact
+        uses: actions/upload-artifact@v4
+        with:
+          name: release-${{ matrix.asset_suffix }}
+          path: dist/*
+          if-no-files-found: error
+          retention-days: 7
+
+  release:
+    name: Publish GitHub Release
+    needs: build
+    runs-on: ubuntu-latest
+    timeout-minutes: 10
+    permissions:
+      contents: write
+    steps:
+      - name: Download release artifacts
+        uses: actions/download-artifact@v4
+        with:
+          pattern: release-*
+          path: dist
+          merge-multiple: true
+
+      - name: Verify checksums
+        shell: bash
+        run: |
+          cd dist
+          for checksum in *.sha256; do
+            shasum -a 256 -c "$checksum"
+          done
+
+      - name: Create GitHub Release
+        shell: bash
+        env:
+          GH_TOKEN: ${{ github.token }}
+          RELEASE_NOTES: |
+            ## 安装说明
+
+            当前构建使用 ad-hoc 签名，尚未经过 Apple 公证。下载并解压后，将 `DSH Desktop.app` 移动到 `/Applications`。
+
+            如果 macOS 提示应用无法验证或禁止启动，请执行：
+
+            ```sh
+            sudo xattr -dr com.apple.quarantine "/Applications/DSH Desktop.app"
+            open "/Applications/DSH Desktop.app"
+            ```
+
+            仅对从本仓库官方 Release 下载的应用执行该命令。
+        run: |
+          prerelease=()
+          if [[ "$GITHUB_REF_NAME" == *-* ]]; then
+            prerelease+=(--prerelease)
+          fi
+          gh release create "$GITHUB_REF_NAME" dist/* \
+            --verify-tag \
+            --generate-notes \
+            --title "DSH Desktop $GITHUB_REF_NAME" \
+            --notes "$RELEASE_NOTES" \
+            "${prerelease[@]}"
