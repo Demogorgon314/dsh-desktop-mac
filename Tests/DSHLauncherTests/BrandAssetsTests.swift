@@ -12,8 +12,7 @@ final class BrandAssetsTests: XCTestCase {
     }
 
     func testAppIconSourceIsHighResolutionWithTransparentCorners() throws {
-        let url = try XCTUnwrap(Bundle.module.url(forResource: "AppIconSource", withExtension: "png"))
-        let data = try Data(contentsOf: url)
+        let data = try Data(contentsOf: appIconSourceURL)
         let representation = try XCTUnwrap(NSBitmapImageRep(data: data))
 
         XCTAssertEqual(representation.pixelsWide, 1024)
@@ -23,12 +22,16 @@ final class BrandAssetsTests: XCTestCase {
         XCTAssertEqual(representation.colorAt(x: 512, y: 512)?.alphaComponent ?? 0, 1, accuracy: 0.01)
     }
 
+    func testAppIconSourceIsNotBundledAtRuntime() {
+        XCTAssertNil(Bundle.module.url(forResource: "AppIconSource", withExtension: "png"))
+    }
+
     func testApplicationIconLoadsBundledImageForDock() throws {
         let image = try XCTUnwrap(
             ApplicationIcon.load(
                 from: Bundle.module,
-                resource: "AppIconSource",
-                extension: "png"
+                resource: "DeepSeekFish",
+                extension: "svg"
             )
         )
 
@@ -45,5 +48,13 @@ final class BrandAssetsTests: XCTestCase {
                 extension: "icns"
             )
         )
+    }
+
+    private var appIconSourceURL: URL {
+        URL(fileURLWithPath: #filePath)
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .deletingLastPathComponent()
+            .appendingPathComponent("Sources/DSHLauncher/Resources/AppIconSource.png")
     }
 }

@@ -12,7 +12,8 @@ let package = Package(
         .executableTarget(
             name: "DSHLauncher",
             path: "Sources/DSHLauncher",
-            resources: [.process("Resources")]
+            exclude: ["Resources/AppIconSource.png"],
+            resources: [.process("Resources/DeepSeekFish.svg")]
         ),
         .testTarget(
             name: "DSHLauncherTests",
