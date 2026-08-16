@@ -19,6 +19,58 @@ enum RuntimePhase: Equatable {
     }
 }
 
+enum StatusTone: Equatable {
+    case working
+    case idle
+    case error
+}
+
+struct StatusPresentation: Equatable {
+    let title: String
+    let detail: String
+    let tone: StatusTone
+    let actionTitle: String?
+
+    var showsActivity: Bool { tone == .working }
+
+    init?(phase: RuntimePhase) {
+        switch phase {
+        case .running:
+            return nil
+        case .checkingVersion:
+            title = "正在检查更新"
+            detail = "正在获取 DeepSeek Harness 的最新版本。"
+            tone = .working
+            actionTitle = nil
+        case .installing(let version):
+            title = "正在安装 DSH"
+            detail = "正在准备 \(version)，首次安装可能需要几分钟。"
+            tone = .working
+            actionTitle = nil
+        case .starting(let version):
+            title = "正在启动 DSH"
+            detail = "版本 \(version) 即将就绪。"
+            tone = .working
+            actionTitle = nil
+        case .stopping:
+            title = "正在停止服务"
+            detail = "正在安全关闭当前 DSH 进程。"
+            tone = .working
+            actionTitle = nil
+        case .stopped:
+            title = "DSH 服务已停止"
+            detail = "启动本地服务后即可继续使用。"
+            tone = .idle
+            actionTitle = "启动服务"
+        case .failed(let message):
+            title = "无法启动 DSH"
+            detail = message
+            tone = .error
+            actionTitle = "重试"
+        }
+    }
+}
+
 struct InstalledRuntime: Codable, Equatable {
     let version: String
 }

@@ -5,7 +5,15 @@ import WebKit
 final class MainWindowController: NSWindowController, NSWindowDelegate, WKNavigationDelegate, WKUIDelegate {
     private let webView: WKWebView
     private let statusView = NSVisualEffectView()
-    private let statusLabel = NSTextField(labelWithString: "正在准备 DeepSeek Harness…")
+    private let statusPanel = NSVisualEffectView()
+    private let brandBadge = NSView()
+    private let brandImageView = NSImageView()
+    private let productLabel = NSTextField(labelWithString: "DSH Desktop")
+    private let productDetailLabel = NSTextField(labelWithString: "DeepSeek Harness")
+    private let statusIndicator = NSView()
+    private let statusTitleLabel = NSTextField(labelWithString: "正在准备 DSH")
+    private let statusDetailLabel = NSTextField(labelWithString: "正在初始化本地服务。")
+    private let activityIndicator = NSProgressIndicator()
     private let retryButton = NSButton(title: "重试", target: nil, action: nil)
     private var allowedOrigin: URL?
     var onRetry: (() -> Void)?
@@ -38,21 +46,10 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
     }
 
     func render(_ phase: RuntimePhase) {
-        switch phase {
-        case .running(_, let url):
+        if case .running(_, let url) = phase {
             showHarness(url: url)
-        case .failed(let message):
-            showStatus(message, retry: true)
-        case .stopped:
-            showStatus("DSH 服务已停止。", retry: true)
-        case .checkingVersion:
-            showStatus("正在检查 DSH 版本…")
-        case .installing(let version):
-            showStatus("正在安装 DSH \(version)…\n首次安装可能需要几分钟。")
-        case .starting(let version):
-            showStatus("正在启动 DSH \(version)…")
-        case .stopping:
-            showStatus("正在停止 DSH 服务…")
+        } else if let presentation = StatusPresentation(phase: phase) {
+            showStatus(presentation)
         }
     }
 
@@ -121,23 +118,92 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
         guard let content = window.contentView else { return }
         webView.translatesAutoresizingMaskIntoConstraints = false
         statusView.translatesAutoresizingMaskIntoConstraints = false
-        statusView.material = .sidebar
+        statusView.material = .underWindowBackground
         statusView.state = .active
+        statusView.blendingMode = .withinWindow
 
-        statusLabel.alignment = .center
-        statusLabel.font = .systemFont(ofSize: 15)
-        statusLabel.maximumNumberOfLines = 0
-        statusLabel.translatesAutoresizingMaskIntoConstraints = false
+        statusPanel.translatesAutoresizingMaskIntoConstraints = false
+        statusPanel.material = .contentBackground
+        statusPanel.state = .active
+        statusPanel.blendingMode = .withinWindow
+        statusPanel.wantsLayer = true
+        statusPanel.layer?.cornerRadius = 22
+        statusPanel.layer?.masksToBounds = true
+        statusPanel.layer?.borderWidth = 0.5
+        statusPanel.layer?.borderColor = NSColor.separatorColor.withAlphaComponent(0.35).cgColor
+
+        brandBadge.translatesAutoresizingMaskIntoConstraints = false
+        brandBadge.wantsLayer = true
+        brandBadge.layer?.cornerRadius = 17
+        brandBadge.layer?.backgroundColor = NSColor.controlAccentColor.withAlphaComponent(0.10).cgColor
+        brandBadge.layer?.borderWidth = 0.5
+        brandBadge.layer?.borderColor = NSColor.controlAccentColor.withAlphaComponent(0.18).cgColor
+
+        brandImageView.translatesAutoresizingMaskIntoConstraints = false
+        brandImageView.image = brandImage()
+        brandImageView.imageScaling = .scaleProportionallyDown
+        brandImageView.contentTintColor = .labelColor
+        brandImageView.setAccessibilityLabel("DeepSeek")
+
+        productLabel.font = .systemFont(ofSize: 13, weight: .semibold)
+        productLabel.textColor = .labelColor
+        productDetailLabel.font = .systemFont(ofSize: 12, weight: .regular)
+        productDetailLabel.textColor = .secondaryLabelColor
+
+        statusIndicator.translatesAutoresizingMaskIntoConstraints = false
+        statusIndicator.wantsLayer = true
+        statusIndicator.layer?.cornerRadius = 4
+
+        statusTitleLabel.font = .systemFont(ofSize: 24, weight: .semibold)
+        statusTitleLabel.textColor = .labelColor
+        statusTitleLabel.maximumNumberOfLines = 2
+        statusDetailLabel.font = .systemFont(ofSize: 14, weight: .regular)
+        statusDetailLabel.textColor = .secondaryLabelColor
+        statusDetailLabel.maximumNumberOfLines = 0
+        statusDetailLabel.lineBreakMode = .byWordWrapping
+
+        activityIndicator.style = .bar
+        activityIndicator.controlSize = .small
+        activityIndicator.isIndeterminate = true
+        activityIndicator.translatesAutoresizingMaskIntoConstraints = false
+
         retryButton.target = self
         retryButton.action = #selector(retry)
         retryButton.bezelStyle = .rounded
+        retryButton.controlSize = .large
+        retryButton.keyEquivalent = "\r"
         retryButton.translatesAutoresizingMaskIntoConstraints = false
         retryButton.isHidden = true
 
+        let productText = NSStackView(views: [productLabel, productDetailLabel])
+        productText.orientation = .vertical
+        productText.alignment = .leading
+        productText.spacing = 2
+
+        let brandRow = NSStackView(views: [brandBadge, productText])
+        brandRow.orientation = .horizontal
+        brandRow.alignment = .centerY
+        brandRow.spacing = 14
+
+        let titleRow = NSStackView(views: [statusIndicator, statusTitleLabel])
+        titleRow.orientation = .horizontal
+        titleRow.alignment = .centerY
+        titleRow.spacing = 12
+
+        let statusContent = NSStackView(views: [brandRow, titleRow, statusDetailLabel, activityIndicator, retryButton])
+        statusContent.translatesAutoresizingMaskIntoConstraints = false
+        statusContent.orientation = .vertical
+        statusContent.alignment = .leading
+        statusContent.spacing = 10
+        statusContent.setCustomSpacing(30, after: brandRow)
+        statusContent.setCustomSpacing(8, after: titleRow)
+        statusContent.setCustomSpacing(24, after: statusDetailLabel)
+
         content.addSubview(webView)
         content.addSubview(statusView)
-        statusView.addSubview(statusLabel)
-        statusView.addSubview(retryButton)
+        statusView.addSubview(statusPanel)
+        statusPanel.addSubview(statusContent)
+        brandBadge.addSubview(brandImageView)
         NSLayoutConstraint.activate([
             webView.leadingAnchor.constraint(equalTo: content.leadingAnchor),
             webView.trailingAnchor.constraint(equalTo: content.trailingAnchor),
@@ -147,17 +213,29 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
             statusView.trailingAnchor.constraint(equalTo: content.trailingAnchor),
             statusView.topAnchor.constraint(equalTo: content.topAnchor),
             statusView.bottomAnchor.constraint(equalTo: content.bottomAnchor),
-            statusLabel.centerXAnchor.constraint(equalTo: statusView.centerXAnchor),
-            statusLabel.centerYAnchor.constraint(equalTo: statusView.centerYAnchor, constant: -18),
-            statusLabel.leadingAnchor.constraint(greaterThanOrEqualTo: statusView.leadingAnchor, constant: 40),
-            statusLabel.trailingAnchor.constraint(lessThanOrEqualTo: statusView.trailingAnchor, constant: -40),
-            retryButton.centerXAnchor.constraint(equalTo: statusView.centerXAnchor),
-            retryButton.topAnchor.constraint(equalTo: statusLabel.bottomAnchor, constant: 18),
+            statusPanel.centerXAnchor.constraint(equalTo: statusView.centerXAnchor),
+            statusPanel.centerYAnchor.constraint(equalTo: statusView.centerYAnchor, constant: -24),
+            statusPanel.widthAnchor.constraint(equalToConstant: 460),
+            statusContent.leadingAnchor.constraint(equalTo: statusPanel.leadingAnchor, constant: 38),
+            statusContent.trailingAnchor.constraint(equalTo: statusPanel.trailingAnchor, constant: -38),
+            statusContent.topAnchor.constraint(equalTo: statusPanel.topAnchor, constant: 34),
+            statusContent.bottomAnchor.constraint(equalTo: statusPanel.bottomAnchor, constant: -38),
+            brandBadge.widthAnchor.constraint(equalToConstant: 58),
+            brandBadge.heightAnchor.constraint(equalToConstant: 58),
+            brandImageView.centerXAnchor.constraint(equalTo: brandBadge.centerXAnchor),
+            brandImageView.centerYAnchor.constraint(equalTo: brandBadge.centerYAnchor),
+            brandImageView.widthAnchor.constraint(equalToConstant: 38),
+            brandImageView.heightAnchor.constraint(equalToConstant: 38),
+            statusIndicator.widthAnchor.constraint(equalToConstant: 8),
+            statusIndicator.heightAnchor.constraint(equalToConstant: 8),
+            activityIndicator.widthAnchor.constraint(equalTo: statusContent.widthAnchor),
+            activityIndicator.heightAnchor.constraint(equalToConstant: 4),
         ])
     }
 
     private func showHarness(url: URL) {
         allowedOrigin = url
+        activityIndicator.stopAnimation(nil)
         statusView.isHidden = true
         webView.isHidden = false
         if webView.url?.scheme != url.scheme || webView.url?.host != url.host || webView.url?.port != url.port {
@@ -165,11 +243,37 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
         }
     }
 
-    private func showStatus(_ message: String, retry: Bool = false) {
-        statusLabel.stringValue = message
-        retryButton.isHidden = !retry
+    private func showStatus(_ presentation: StatusPresentation) {
+        statusTitleLabel.stringValue = presentation.title
+        statusDetailLabel.stringValue = presentation.detail
+        statusIndicator.layer?.backgroundColor = statusColor(for: presentation.tone).cgColor
+        activityIndicator.isHidden = !presentation.showsActivity
+        if presentation.showsActivity {
+            activityIndicator.startAnimation(nil)
+        } else {
+            activityIndicator.stopAnimation(nil)
+        }
+        retryButton.isHidden = presentation.actionTitle == nil
+        if let actionTitle = presentation.actionTitle {
+            retryButton.title = actionTitle
+        }
         statusView.isHidden = false
         webView.isHidden = true
+    }
+
+    private func statusColor(for tone: StatusTone) -> NSColor {
+        switch tone {
+        case .working: return .controlAccentColor
+        case .idle: return .secondaryLabelColor
+        case .error: return .systemRed
+        }
+    }
+
+    private func brandImage() -> NSImage? {
+        guard let url = Bundle.module.url(forResource: "DeepSeekFish", withExtension: "svg"),
+              let image = NSImage(contentsOf: url) else { return nil }
+        image.isTemplate = true
+        return image
     }
 
     private func isAllowed(_ url: URL) -> Bool {
