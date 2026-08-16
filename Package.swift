@@ -11,7 +11,8 @@ let package = Package(
     targets: [
         .executableTarget(
             name: "DSHLauncher",
-            path: "Sources/DSHLauncher"
+            path: "Sources/DSHLauncher",
+            resources: [.process("Resources")]
         ),
         .testTarget(
             name: "DSHLauncherTests",

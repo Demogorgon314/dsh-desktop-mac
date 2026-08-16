@@ -17,8 +17,7 @@ final class StatusItemController: NSObject {
     override init() {
         super.init()
         guard let button = statusItem.button else { return }
-        button.image = NSImage(systemSymbolName: "bolt.horizontal.circle", accessibilityDescription: "DSH Launcher")
-        button.image?.isTemplate = true
+        button.image = brandImage()
         button.target = self
         button.action = #selector(clicked)
         button.sendAction(on: [.leftMouseUp, .rightMouseUp])
@@ -27,19 +26,7 @@ final class StatusItemController: NSObject {
     func render(_ phase: RuntimePhase) {
         self.phase = phase
         statusItem.button?.toolTip = statusText
-        let symbol: String
-        switch phase {
-        case .running:
-            symbol = "bolt.horizontal.circle.fill"
-        case .failed:
-            symbol = "exclamationmark.triangle.fill"
-        case .stopped:
-            symbol = "bolt.horizontal.circle"
-        case .checkingVersion, .installing, .starting, .stopping:
-            symbol = "arrow.triangle.2.circlepath.circle"
-        }
-        statusItem.button?.image = NSImage(systemSymbolName: symbol, accessibilityDescription: statusText)
-        statusItem.button?.image?.isTemplate = true
+        statusItem.button?.image = brandImage()
     }
 
     @objc private func clicked() {
@@ -96,6 +83,25 @@ final class StatusItemController: NSObject {
         item.target = self
         item.isEnabled = enabled
         return item
+    }
+
+    private func brandImage() -> NSImage? {
+        guard let url = brandResourceBundle.url(forResource: "DeepSeekFish", withExtension: "svg"),
+              let image = NSImage(contentsOf: url) else { return nil }
+        image.size = NSSize(width: 19, height: 19)
+        image.isTemplate = true
+        image.accessibilityDescription = "DeepSeek Harness"
+        return image
+    }
+
+    private var brandResourceBundle: Bundle {
+        if let resources = Bundle.main.resourceURL,
+           let bundle = Bundle(
+               url: resources.appendingPathComponent("DSHLauncher_DSHLauncher.bundle", isDirectory: true)
+           ) {
+            return bundle
+        }
+        return Bundle.module
     }
 
     @objc private func open() { onOpen?() }

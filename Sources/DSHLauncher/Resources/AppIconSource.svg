@@ -1,0 +1,9 @@
+<svg xmlns="http://www.w3.org/2000/svg" width="1024" height="1024" viewBox="0 0 1024 1024">
+  <defs>
+    <filter id="white" color-interpolation-filters="sRGB">
+      <feColorMatrix values="0 0 0 0 1  0 0 0 0 1  0 0 0 0 1  0 0 0 1 0"/>
+    </filter>
+  </defs>
+  <rect x="48" y="48" width="928" height="928" rx="218" fill="#4D6BFE"/>
+  <image href="DeepSeekFish.svg" x="160" y="160" width="704" height="704" filter="url(#white)"/>
+</svg>

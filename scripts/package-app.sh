@@ -13,6 +13,8 @@ rm -rf "${app_bundle}"
 mkdir -p "${contents}/MacOS" "${contents}/Resources"
 cp "${binary_directory}/DSHLauncher" "${contents}/MacOS/DSHLauncher"
 cp "${repository_root}/Resources/Info.plist" "${contents}/Info.plist"
+cp "${repository_root}/Resources/AppIcon.icns" "${contents}/Resources/AppIcon.icns"
+cp -R "${binary_directory}/DSHLauncher_DSHLauncher.bundle" "${contents}/Resources/DSHLauncher_DSHLauncher.bundle"
 
 if [[ -n "${DSH_NODE_RUNTIME:-}" ]]; then
     if [[ ! -x "${DSH_NODE_RUNTIME}/bin/node" || ! -x "${DSH_NODE_RUNTIME}/bin/npm" ]]; then
