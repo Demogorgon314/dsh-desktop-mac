@@ -15,7 +15,6 @@ final class LauncherController {
     private let commandRunner: CommandRunning
     private var toolchain: Toolchain?
     private var store: VersionStore?
-    private var installer: PackageInstaller?
     private var runtime: HarnessRuntime?
 
     init(
@@ -37,10 +36,6 @@ final class LauncherController {
             let dependencies = try await prepareDependencies()
             phase = .checkingVersion
             let version = try await preferredVersion(store: dependencies.store)
-            if !dependencies.store.isUsable(version: version) {
-                phase = .installing(version: version)
-            }
-            _ = try await install(version: version, with: dependencies.installer)
             try await launch(version: version, dependencies: dependencies)
         } catch {
             phase = .failed(message: userMessage(error))
@@ -66,8 +61,7 @@ final class LauncherController {
         await runtime?.stop()
         guard let version = currentVersion,
               let toolchain,
-              let store,
-              let installer else {
+              let store else {
             phase = .stopped
             await start()
             return
@@ -75,7 +69,7 @@ final class LauncherController {
         do {
             try await launch(
                 version: version,
-                dependencies: (toolchain, store, installer)
+                dependencies: (toolchain, store)
             )
         } catch {
             phase = .failed(message: userMessage(error))
@@ -103,8 +97,6 @@ final class LauncherController {
                 return
             }
 
-            phase = .installing(version: latest)
-            _ = try await install(version: latest, with: dependencies.installer)
             await runtime?.stop()
             stoppedForUpdate = true
             try await launch(version: latest, dependencies: dependencies)
@@ -125,16 +117,14 @@ final class LauncherController {
         phase = .stopped
     }
 
-    private func prepareDependencies() async throws -> (toolchain: Toolchain, store: VersionStore, installer: PackageInstaller) {
-        if let toolchain, let store, let installer { return (toolchain, store, installer) }
+    private func prepareDependencies() async throws -> (toolchain: Toolchain, store: VersionStore) {
+        if let toolchain, let store { return (toolchain, store) }
         let toolchain = try ToolchainLocator().locate()
         try await validate(toolchain: toolchain)
         let store = VersionStore(paths: paths)
-        let installer = PackageInstaller(paths: paths, toolchain: toolchain, store: store)
         self.toolchain = toolchain
         self.store = store
-        self.installer = installer
-        return (toolchain, store, installer)
+        return (toolchain, store)
     }
 
     private func validate(toolchain: Toolchain) async throws {
@@ -161,40 +151,30 @@ final class LauncherController {
             return try await registry.latestVersion()
         } catch {
             if let current = store.current() { return current.version }
-            if let installed = store.newestUsableVersion() { return installed }
             throw LauncherError.noInstalledRuntime
         }
     }
 
-    private func install(version: String, with installer: PackageInstaller) async throws -> URL {
-        onInstallOutput?(PackageInstaller.commandDescription(version: version) + "\n")
-        return try await installer.installIfNeeded(
-            version: version,
-            onOutput: { [weak self] output in
-                Task { @MainActor in self?.onInstallOutput?(output) }
-            }
-        )
-    }
-
     private func launch(
         version: String,
-        dependencies: (toolchain: Toolchain, store: VersionStore, installer: PackageInstaller)
+        dependencies: (toolchain: Toolchain, store: VersionStore)
     ) async throws {
-        phase = .starting(version: version)
+        phase = .installing(version: version)
         let runtime = HarnessRuntime(paths: paths, toolchain: dependencies.toolchain)
+        runtime.onOutput = { [weak self] output in self?.onInstallOutput?(output) }
         runtime.onUnexpectedExit = { [weak self] code in
             self?.phase = .failed(message: userMessage(LauncherError.harnessExited(code)))
         }
         self.runtime = runtime
 
         do {
-            let url = try await runtime.start(version: version)
+            let url = try await runtime.start(version: version, offline: false)
             try dependencies.store.markCurrent(version: version)
             phase = .running(version: version, url: url)
         } catch {
-            if let previous = dependencies.store.current(), previous.version != version {
-                onNotice?("DSH \(version) 启动失败，已回退到 \(previous.version)。")
-                let fallbackURL = try await runtime.start(version: previous.version)
+            if let previous = dependencies.store.current() {
+                onNotice?("在线启动 DSH \(version) 失败，正在从 npm 缓存启动 \(previous.version)。")
+                let fallbackURL = try await runtime.start(version: previous.version, offline: true)
                 phase = .running(version: previous.version, url: fallbackURL)
                 return
             }

@@ -22,7 +22,7 @@ final class StatusPresentationTests: XCTestCase {
     func testInstallingPresentationIncludesVersion() throws {
         let presentation = try XCTUnwrap(StatusPresentation(phase: .installing(version: "0.1.0-rc.6")))
 
-        XCTAssertEqual(presentation.title, "正在安装 DSH")
+        XCTAssertEqual(presentation.title, "正在准备 DSH")
         XCTAssertTrue(presentation.detail.contains("0.1.0-rc.6"))
         XCTAssertTrue(presentation.showsInstallLog)
     }

@@ -13,18 +13,18 @@ DSH Desktop is a native macOS menu-bar client for [DeepSeek Harness](https://git
 - Official upstream DeepSeek fish icon for the menu bar and app bundle
 - Left click to show or hide DSH; right click for status and actions
 - Start, stop, restart, update, open log, open data directory, and quit actions
-- Latest-version lookup through the npm registry with offline fallback
-- Versioned, atomic DSH installation and rollback to the last working release
+- Latest-version startup through `npm exec` with npm-cache offline fallback
+- Last-known-good version tracking without a private DSH installation
 - Random `127.0.0.1` Web port with readiness checks
 - Graceful child-process shutdown followed by forced termination on timeout
 - Same-origin `WKWebView` navigation; external links open in the default browser
 
 ## Plugin and user-data compatibility
 
-DSH Desktop-managed releases live below:
+DSH Desktop does not keep a private DSH installation. `@deepseek-ai/dsh` and `pnpm` use npm's normal cache:
 
 ```text
-~/Library/Application Support/DSH Desktop/runtime/versions/<version>
+~/.npm
 ```
 
 Harness state uses the same default `DSH_HOME` as the `dsh` command:
@@ -33,7 +33,7 @@ Harness state uses the same default `DSH_HOME` as the `dsh` command:
 ~/.dsh
 ```
 
-An explicitly inherited `DSH_HOME` overrides that default. Profiles, installed plugins, credentials, settings, presets, attachments, and sessions are therefore shared with direct `dsh` invocations and survive DSH Desktop or DSH upgrades. Every managed DSH release also includes the upstream-compatible `pnpm` executable on `PATH`, because `dsh plugin --profile <name> ...` delegates plugin operations to `pnpm` inside `$DSH_HOME/profiles/<name>`.
+An explicitly inherited `DSH_HOME` overrides that default. Profiles, installed plugins, credentials, settings, presets, attachments, and sessions are therefore shared with direct `dsh` invocations and survive DSH Desktop or DSH upgrades. DSH Desktop asks `npm exec` to expose the upstream-compatible `pnpm` executable on `PATH`, because `dsh plugin --profile <name> ...` delegates plugin operations to `pnpm` inside `$DSH_HOME/profiles/<name>`.
 
 Do not run a direct `dsh` service and the DSH Desktop-managed service concurrently against the same `DSH_HOME`.
 
@@ -52,7 +52,7 @@ swift test
 swift run DSHDesktop
 ```
 
-On first launch, DSH Desktop downloads the current `@deepseek-ai/dsh` release and `pnpm` into Application Support. If the npm registry cannot be reached, it starts the last successfully used local release.
+On every launch, DSH Desktop asks `npm exec` to start the current `@deepseek-ai/dsh` release and expose `pnpm`. After one successful online launch, a later online failure falls back to the last-known-good exact version in npm's cache. The first launch therefore requires npm registry access.
 
 ## Build an app bundle
 

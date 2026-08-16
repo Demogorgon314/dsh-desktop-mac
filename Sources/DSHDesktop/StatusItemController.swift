@@ -70,7 +70,7 @@ final class StatusItemController: NSObject {
         switch phase {
         case .stopped: return "DSH 服务未启动"
         case .checkingVersion: return "正在检查 DSH 更新…"
-        case .installing(let version): return "正在安装 DSH \(version)…"
+        case .installing(let version): return "正在准备 DSH \(version)…"
         case .starting(let version): return "正在启动 DSH \(version)…"
         case .running: return "DSH 服务正在运行"
         case .stopping: return "正在停止 DSH 服务…"

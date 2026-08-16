@@ -45,8 +45,8 @@ struct StatusPresentation: Equatable {
             actionTitle = nil
             showsInstallLog = false
         case .installing(let version):
-            title = "正在安装 DSH"
-            detail = "正在准备 \(version)，首次安装可能需要几分钟。"
+            title = "正在准备 DSH"
+            detail = "正在通过 npm 启动 \(version)，首次使用可能需要几分钟。"
             tone = .working
             actionTitle = nil
             showsInstallLog = true
@@ -98,7 +98,7 @@ enum LauncherError: LocalizedError {
         case .unsupportedNodeVersion(let version):
             return "Node.js \(version) 不受支持，需要 22.19.x 或 24 及以上版本。"
         case .noInstalledRuntime:
-            return "无法连接 npm，并且本机还没有可用的 DSH 版本。"
+            return "无法连接 npm，并且还没有成功启动过可供离线缓存使用的 DSH 版本。"
         case .invalidRegistryResponse:
             return "npm registry 返回了无法识别的 DSH 版本信息。"
         case .commandFailed(let command, let code, let output):
@@ -109,7 +109,7 @@ enum LauncherError: LocalizedError {
         case .harnessExited(let code):
             return "DSH 服务意外退出，退出码 \(code)。"
         case .startupTimedOut:
-            return "DSH 服务没有在 45 秒内完成启动。"
+            return "DSH 服务没有在 5 分钟内完成准备和启动。"
         }
     }
 }

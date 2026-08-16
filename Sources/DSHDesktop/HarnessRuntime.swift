@@ -3,6 +3,8 @@ import Foundation
 
 @MainActor
 final class HarnessRuntime {
+    nonisolated static let pnpmVersion = "11.7.0"
+
     private let paths: AppPaths
     private let toolchain: Toolchain
     private let session: URLSession
@@ -12,6 +14,7 @@ final class HarnessRuntime {
     private var logHandle: FileHandle?
 
     var onUnexpectedExit: ((Int32) -> Void)?
+    var onOutput: ((String) -> Void)?
 
     init(paths: AppPaths, toolchain: Toolchain, session: URLSession = .shared) {
         self.paths = paths
@@ -19,33 +22,46 @@ final class HarnessRuntime {
         self.session = session
     }
 
-    func start(version: String) async throws -> URL {
+    nonisolated static func npmArguments(version: String, offline: Bool, port: UInt16) -> [String] {
+        [
+            "exec",
+            "--yes",
+            offline ? "--offline" : "--prefer-online",
+            "--package=@deepseek-ai/dsh@\(version)",
+            "--package=pnpm@\(pnpmVersion)",
+            "--",
+            "dsh",
+            "web",
+            "--host", "127.0.0.1",
+            "--port", String(port),
+        ]
+    }
+
+    nonisolated static func commandDescription(version: String, offline: Bool, port: UInt16) -> String {
+        "$ npm \(npmArguments(version: version, offline: offline, port: port).joined(separator: " "))"
+    }
+
+    func start(version: String, offline: Bool = false) async throws -> URL {
         await stop()
-        let runtimeDirectory = paths.runtime(version: version)
-        let dshEntry = runtimeDirectory.appendingPathComponent("node_modules/@deepseek-ai/dsh/lib/bin.js")
         let port = try LoopbackPort.reserve()
         guard let url = URL(string: "http://127.0.0.1:\(port)") else {
             throw LauncherError.invalidRegistryResponse
         }
 
         try openLog()
+        let command = Self.commandDescription(version: version, offline: offline, port: port)
         writeLog("\n[launcher] starting DSH \(version) at \(url.absoluteString)")
+        writeLog("[launcher] \(command)")
+        onOutput?(command + "\n")
 
         let child = Process()
         let pipe = Pipe()
-        child.executableURL = toolchain.node
-        child.arguments = [
-            "--expose-internals",
-            dshEntry.path,
-            "web",
-            "--host", "127.0.0.1",
-            "--port", String(port),
-        ]
+        child.executableURL = toolchain.npm
+        child.arguments = Self.npmArguments(version: version, offline: offline, port: port)
         child.currentDirectoryURL = paths.launchRoot
         child.environment = RuntimeEnvironment.make(
             paths: paths,
-            toolchain: toolchain,
-            runtimeDirectory: runtimeDirectory
+            toolchain: toolchain
         )
         child.standardInput = FileHandle.nullDevice
         child.standardOutput = pipe
@@ -54,7 +70,11 @@ final class HarnessRuntime {
         pipe.fileHandleForReading.readabilityHandler = { [weak self] handle in
             let data = handle.availableData
             guard !data.isEmpty else { return }
-            Task { @MainActor in self?.writeLog(String(decoding: data, as: UTF8.self)) }
+            Task { @MainActor in
+                let output = String(decoding: data, as: UTF8.self)
+                self?.writeLog(output)
+                self?.onOutput?(output)
+            }
         }
         expectedStop = false
         child.terminationHandler = { [weak self, weak child] terminated in
@@ -114,7 +134,7 @@ final class HarnessRuntime {
     }
 
     private func waitUntilReady(url: URL, process: Process) async throws {
-        for _ in 0..<180 {
+        for _ in 0..<1_200 {
             guard process.isRunning else { throw LauncherError.harnessExited(process.terminationStatus) }
             var request = URLRequest(url: url)
             request.timeoutInterval = 1

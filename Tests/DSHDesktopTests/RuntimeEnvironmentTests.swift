@@ -10,12 +10,9 @@ final class RuntimeEnvironmentTests: XCTestCase {
             node: URL(fileURLWithPath: "/runtime/bin/node"),
             npm: URL(fileURLWithPath: "/runtime/bin/npm")
         )
-        let runtime = paths.runtime(version: "0.1.0")
-
         let environment = RuntimeEnvironment.make(
             paths: paths,
             toolchain: toolchain,
-            runtimeDirectory: runtime,
             parent: ["PATH": "/usr/bin:/bin", "CUSTOM": "preserved"]
         )
 
@@ -23,8 +20,9 @@ final class RuntimeEnvironmentTests: XCTestCase {
         XCTAssertEqual(environment["CUSTOM"], "preserved")
         XCTAssertEqual(
             environment["PATH"],
-            "/tmp/dsh-launcher/runtime/versions/0.1.0/node_modules/.bin:/runtime/bin:/usr/bin:/bin"
+            "/runtime/bin:/usr/bin:/bin"
         )
-        XCTAssertFalse(environment["DSH_HOME"]!.contains("/runtime/versions/"))
+        XCTAssertEqual(environment["npm_config_color"], "false")
+        XCTAssertNil(environment["npm_config_cache"])
     }
 }

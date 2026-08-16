@@ -17,17 +17,17 @@ final class AppPathsTests: XCTestCase {
         )
     }
 
-    func testUserDataIsSeparateFromVersionedRuntime() throws {
+    func testUserDataIsSeparateFromLauncherState() throws {
         let root = URL(fileURLWithPath: "/tmp/dsh-launcher-tests", isDirectory: true)
         let dshHome = URL(fileURLWithPath: "/tmp/existing-dsh-home", isDirectory: true)
         let paths = try AppPaths(root: root, dshHome: dshHome)
 
         XCTAssertEqual(paths.dshHome.path, "/tmp/existing-dsh-home")
-        XCTAssertEqual(paths.runtime(version: "1.2.3").path, "/tmp/dsh-launcher-tests/runtime/versions/1.2.3")
-        XCTAssertFalse(paths.dshHome.path.hasPrefix(paths.runtimes.path))
+        XCTAssertEqual(paths.currentRuntime.path, "/tmp/dsh-launcher-tests/current.json")
+        XCTAssertFalse(paths.dshHome.path.hasPrefix(paths.root.path))
     }
 
-    func testPrepareCreatesPersistentPluginAndRuntimeDirectories() throws {
+    func testPrepareCreatesOnlyLauncherStateAndPluginDirectories() throws {
         let root = FileManager.default.temporaryDirectory
             .appendingPathComponent(UUID().uuidString, isDirectory: true)
         defer { try? FileManager.default.removeItem(at: root) }
@@ -35,11 +35,12 @@ final class AppPathsTests: XCTestCase {
 
         try paths.prepare()
 
-        for directory in [paths.dshHome, paths.runtimes, paths.npmCache, paths.launchRoot, paths.logs] {
+        for directory in [paths.root, paths.dshHome, paths.launchRoot, paths.logs] {
             var isDirectory: ObjCBool = false
             XCTAssertTrue(FileManager.default.fileExists(atPath: directory.path, isDirectory: &isDirectory))
             XCTAssertTrue(isDirectory.boolValue)
         }
+        XCTAssertFalse(FileManager.default.fileExists(atPath: root.appendingPathComponent("runtime").path))
     }
 
     func testEnvironmentDshHomeOverridesCommandLineDefault() throws {
