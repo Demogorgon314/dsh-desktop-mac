@@ -17,6 +17,8 @@ final class BrandAssetsTests: XCTestCase {
 
         XCTAssertTrue(source.contains("fill=\"#fff\""))
         XCTAssertTrue(source.contains("DeepSeekFish.svg"))
+        XCTAssertTrue(source.contains("x=\"100\" y=\"100\" width=\"824\" height=\"824\""))
+        XCTAssertTrue(source.contains("x=\"200\" y=\"200\" width=\"624\" height=\"624\""))
         XCTAssertFalse(source.contains("#4D6BFE"))
     }
 }
