@@ -48,7 +48,7 @@ open "/Applications/DSH Desktop.app"
 
 ## DSH 启动与离线缓存
 
-DSH Desktop 每次启动都会通过 `npm exec` 准备当前版本的 `@deepseek-ai/dsh` 和 `pnpm`。第一次在线启动成功后，如果后续联网启动失败，应用会从 npm 缓存启动最后一次成功运行的精确版本。
+DSH Desktop 每次启动都会通过 `npm exec` 准备当前版本的 `@deepseek-ai/dsh` 和 `pnpm`。启动时优先复用 npm 缓存，仅在缺少当前版本时下载；第一次在线启动成功后，如果后续联网启动失败，应用会从 npm 缓存启动最后一次成功运行的精确版本。
 
 因此第一次启动必须能够访问 npm registry。DSH 和 `pnpm` 使用 npm 的常规缓存：
 
