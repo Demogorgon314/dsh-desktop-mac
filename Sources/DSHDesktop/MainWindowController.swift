@@ -21,6 +21,9 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
     private let installLogTextView = NSTextView(frame: .zero)
     private let retryButton = NSButton(title: "重试", target: nil, action: nil)
     private var installLogBuffer = InstallLogBuffer()
+    private var installProgressTimer: Timer?
+    private var installStartedAt: Date?
+    private var installingVersion: String?
     private var downloadFiles = DownloadFileCoordinator()
     private var allowedOrigin: URL?
     var onRetry: (() -> Void)?
@@ -55,9 +58,15 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
 
     func render(_ phase: RuntimePhase) {
         if case .running(_, let url) = phase {
+            stopInstallProgress()
             showHarness(url: url)
         } else if let presentation = StatusPresentation(phase: phase) {
             showStatus(presentation)
+            if case .installing(let version) = phase {
+                startInstallProgress(version: version)
+            } else {
+                stopInstallProgress()
+            }
         }
     }
 
@@ -384,6 +393,35 @@ final class MainWindowController: NSWindowController, NSWindowDelegate, WKNaviga
         }
         statusView.isHidden = false
         webView.isHidden = true
+    }
+
+    private func startInstallProgress(version: String) {
+        guard installingVersion != version || installProgressTimer == nil else { return }
+        stopInstallProgress()
+        installingVersion = version
+        installStartedAt = Date()
+        updateInstallProgress()
+
+        let timer = Timer(timeInterval: 1, repeats: true) { [weak self] _ in
+            Task { @MainActor in self?.updateInstallProgress() }
+        }
+        installProgressTimer = timer
+        RunLoop.main.add(timer, forMode: .common)
+    }
+
+    private func updateInstallProgress() {
+        guard let version = installingVersion, let installStartedAt else { return }
+        statusDetailLabel.stringValue = InstallProgress.detail(
+            version: version,
+            elapsed: Date().timeIntervalSince(installStartedAt)
+        )
+    }
+
+    private func stopInstallProgress() {
+        installProgressTimer?.invalidate()
+        installProgressTimer = nil
+        installStartedAt = nil
+        installingVersion = nil
     }
 
     private func statusColor(for tone: StatusTone) -> NSColor {

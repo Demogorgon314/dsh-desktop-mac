@@ -27,6 +27,15 @@ final class StatusPresentationTests: XCTestCase {
         XCTAssertTrue(presentation.showsInstallLog)
     }
 
+    func testInstallProgressFormatsElapsedTime() {
+        XCTAssertEqual(InstallProgress.duration(0), "00:00")
+        XCTAssertEqual(InstallProgress.duration(65), "01:05")
+        XCTAssertEqual(InstallProgress.duration(3_661), "1:01:01")
+        XCTAssertEqual(InstallProgress.duration(-1), "00:00")
+        XCTAssertTrue(InstallProgress.detail(version: "1.2.3", elapsed: 65).contains("1.2.3"))
+        XCTAssertTrue(InstallProgress.detail(version: "1.2.3", elapsed: 65).contains("01:05"))
+    }
+
     func testStoppedPresentationOffersStartAction() throws {
         let presentation = try XCTUnwrap(StatusPresentation(phase: .stopped))
 
