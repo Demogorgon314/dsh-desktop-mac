@@ -18,6 +18,7 @@ DSH Desktop is a native macOS menu-bar client for [DeepSeek Harness](https://git
 - Left click to show or hide DSH; right click for status and actions
 - Start, stop, restart, update, open log, open data directory, and quit actions
 - Latest-version startup through `npm exec` with npm-cache offline fallback
+- Elapsed time and npm network activity while dependencies are prepared
 - Last-known-good version tracking without a private DSH installation
 - Random `127.0.0.1` Web port with readiness checks
 - Graceful child-process shutdown followed by forced termination on timeout

@@ -28,6 +28,7 @@ final class HarnessRuntime {
             "exec",
             "--yes",
             offline ? "--offline" : "--prefer-offline",
+            "--loglevel=http",
             "--package=@deepseek-ai/dsh@\(version)",
             "--package=pnpm@\(pnpmVersion)",
             "--",

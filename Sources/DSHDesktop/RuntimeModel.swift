@@ -46,7 +46,7 @@ struct StatusPresentation: Equatable {
             showsInstallLog = false
         case .installing(let version):
             title = "正在准备 DSH"
-            detail = "正在通过 npm 启动 \(version)，首次使用可能需要几分钟。"
+            detail = InstallProgress.detail(version: version, elapsed: 0)
             tone = .working
             actionTitle = nil
             showsInstallLog = true
@@ -75,6 +75,23 @@ struct StatusPresentation: Equatable {
             actionTitle = "重试"
             showsInstallLog = false
         }
+    }
+}
+
+enum InstallProgress {
+    static func detail(version: String, elapsed: TimeInterval) -> String {
+        "正在通过 npm 准备 \(version)，已等待 \(duration(elapsed))。首次使用可能需要几分钟。"
+    }
+
+    static func duration(_ interval: TimeInterval) -> String {
+        let totalSeconds = max(0, Int(interval))
+        let hours = totalSeconds / 3_600
+        let minutes = (totalSeconds % 3_600) / 60
+        let seconds = totalSeconds % 60
+        if hours > 0 {
+            return String(format: "%d:%02d:%02d", hours, minutes, seconds)
+        }
+        return String(format: "%02d:%02d", minutes, seconds)
     }
 }
 
