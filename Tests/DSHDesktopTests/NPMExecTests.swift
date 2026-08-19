@@ -6,7 +6,7 @@ final class NPMExecTests: XCTestCase {
         XCTAssertEqual(HarnessRuntime.startupTimeout, 30 * 60)
     }
 
-    func testOnlineArgumentsUseExactDshAndPnpmVersions() {
+    func testOnlineArgumentsPreferCachedExactDshAndPnpmVersions() {
         let arguments = HarnessRuntime.npmArguments(
             version: "0.1.0-rc.6",
             offline: false,
@@ -16,7 +16,7 @@ final class NPMExecTests: XCTestCase {
         XCTAssertEqual(arguments, [
             "exec",
             "--yes",
-            "--prefer-online",
+            "--prefer-offline",
             "--package=@deepseek-ai/dsh@0.1.0-rc.6",
             "--package=pnpm@\(HarnessRuntime.pnpmVersion)",
             "--",
@@ -36,6 +36,7 @@ final class NPMExecTests: XCTestCase {
 
         XCTAssertTrue(arguments.contains("--offline"))
         XCTAssertFalse(arguments.contains("--prefer-online"))
+        XCTAssertFalse(arguments.contains("--prefer-offline"))
         XCTAssertTrue(arguments.contains("--package=@deepseek-ai/dsh@1.2.3"))
         XCTAssertTrue(arguments.contains("--package=pnpm@\(HarnessRuntime.pnpmVersion)"))
     }

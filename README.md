@@ -56,7 +56,7 @@ swift test
 swift run DSHDesktop
 ```
 
-On every launch, DSH Desktop asks `npm exec` to start the current `@deepseek-ai/dsh` release and expose `pnpm`. After one successful online launch, a later online failure falls back to the last-known-good exact version in npm's cache. The first launch therefore requires npm registry access.
+On every launch, DSH Desktop asks `npm exec` to start the current `@deepseek-ai/dsh` release and expose `pnpm`. It prefers npm's cache and downloads packages only when the current version is missing. After one successful online launch, a later online failure falls back to the last-known-good exact version in npm's cache. The first launch therefore requires npm registry access.
 
 ## Build an app bundle
 

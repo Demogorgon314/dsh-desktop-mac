@@ -27,7 +27,7 @@ final class HarnessRuntime {
         [
             "exec",
             "--yes",
-            offline ? "--offline" : "--prefer-online",
+            offline ? "--offline" : "--prefer-offline",
             "--package=@deepseek-ai/dsh@\(version)",
             "--package=pnpm@\(pnpmVersion)",
             "--",
