@@ -117,6 +117,10 @@ final class LauncherController {
         phase = .stopped
     }
 
+    nonisolated static func shouldStartOffline(version: String, installedVersion: String?) -> Bool {
+        installedVersion == version
+    }
+
     private func prepareDependencies() async throws -> (toolchain: Toolchain, store: VersionStore) {
         if let toolchain, let store { return (toolchain, store) }
         let toolchain = try ToolchainLocator().locate()
@@ -167,12 +171,23 @@ final class LauncherController {
         }
         self.runtime = runtime
 
+        let previous = dependencies.store.current()
+        if Self.shouldStartOffline(version: version, installedVersion: previous?.version) {
+            do {
+                let url = try await runtime.start(version: version, offline: true)
+                phase = .running(version: version, url: url)
+                return
+            } catch {
+                onNotice?("本地 npm 缓存不可用，正在重新下载 DSH \(version)。")
+            }
+        }
+
         do {
             let url = try await runtime.start(version: version, offline: false)
             try dependencies.store.markCurrent(version: version)
             phase = .running(version: version, url: url)
         } catch {
-            if let previous = dependencies.store.current() {
+            if let previous, previous.version != version {
                 onNotice?("在线启动 DSH \(version) 失败，正在从 npm 缓存启动 \(previous.version)。")
                 let fallbackURL = try await runtime.start(version: previous.version, offline: true)
                 phase = .running(version: previous.version, url: fallbackURL)
