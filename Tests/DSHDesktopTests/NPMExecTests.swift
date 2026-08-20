@@ -25,6 +25,7 @@ final class NPMExecTests: XCTestCase {
             "web",
             "--host", "127.0.0.1",
             "--port", "8765",
+            "--no-open",
         ])
     }
 
@@ -41,5 +42,6 @@ final class NPMExecTests: XCTestCase {
         XCTAssertTrue(arguments.contains("--loglevel=http"))
         XCTAssertTrue(arguments.contains("--package=@deepseek-ai/dsh@1.2.3"))
         XCTAssertTrue(arguments.contains("--package=pnpm@\(HarnessRuntime.pnpmVersion)"))
+        XCTAssertTrue(arguments.contains("--no-open"))
     }
 }

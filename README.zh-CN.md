@@ -25,6 +25,7 @@ DSH Desktop 是 [DeepSeek Harness](https://github.com/deepseek-ai/deepseek-harne
 - 准备依赖时显示已等待时间和 npm 网络活动日志
 - 只记录最后一次成功运行的版本，不维护独立的 DSH 安装目录
 - 使用随机 `127.0.0.1` 端口，并进行服务就绪检测
+- 在内置 `WKWebView` 中显示界面，不额外打开系统浏览器
 - 优雅关闭子进程，超时后强制终止
 - 同源页面在 `WKWebView` 中打开，外部链接交给默认浏览器
 - 支持标准复制、粘贴等 macOS 快捷键和文件下载
