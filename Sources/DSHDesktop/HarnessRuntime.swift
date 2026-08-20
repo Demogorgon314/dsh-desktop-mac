@@ -36,6 +36,7 @@ final class HarnessRuntime {
             "web",
             "--host", "127.0.0.1",
             "--port", String(port),
+            "--no-open",
         ]
     }
 

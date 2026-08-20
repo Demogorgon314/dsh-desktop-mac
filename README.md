@@ -21,6 +21,7 @@ DSH Desktop is a native macOS menu-bar client for [DeepSeek Harness](https://git
 - Elapsed time and npm network activity while dependencies are prepared
 - Last-known-good version tracking without a private DSH installation
 - Random `127.0.0.1` Web port with readiness checks
+- Embedded `WKWebView` display without opening the system browser
 - Graceful child-process shutdown followed by forced termination on timeout
 - Same-origin `WKWebView` navigation; external links open in the default browser
 
